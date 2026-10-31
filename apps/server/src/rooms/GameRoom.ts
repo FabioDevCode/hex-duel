@@ -8,6 +8,9 @@ import { GameRoomState, PlayerSchema } from "./GameRoomState";
 
 const RECONNECTION_SECONDS = Math.ceil(GAME_CONFIG.reconnectGracePeriodMs / 1000);
 
+/** Time the clients have to play the resolution animation (UI_UX_SPEC 18). */
+const RESOLUTION_DURATION_MS = 4_000;
+
 export class GameRoom extends Room<{ state: GameRoomState }> {
   override maxClients = 2;
   private game = new GameService({ 0: "", 1: "" });
@@ -151,6 +154,15 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     this.clearTurnTimer();
     this.state.status = "RESOLVING";
 
+    const revealedActions = this.game.getRevealedActions();
+    this.broadcast("turn_revealed", {
+      turnNumber: this.state.turnNumber,
+      actions: [
+        { seat: 0 as Seat, action: revealedActions[0] },
+        { seat: 1 as Seat, action: revealedActions[1] },
+      ],
+    });
+
     const resolution = this.game.resolveCurrentTurn(this.state.turnNumber);
     for (let i = 0; i < 2; i++) {
       const synced = this.state.players.at(i);
@@ -170,11 +182,13 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
 
     if (resolution.finished && resolution.winner) {
       this.state.status = "FINISHED";
-      this.broadcast("game_finished", { result: resolution.winner });
+      this.clock.setTimeout(() => {
+        this.broadcast("game_finished", { result: resolution.winner });
+      }, RESOLUTION_DURATION_MS);
       void this.recordResult(resolution.winner, resolution.turnNumber, "COMPLETED");
       return;
     }
-    this.startTurn();
+    this.clock.setTimeout(() => this.startTurn(), RESOLUTION_DURATION_MS);
   }
 
   private handleAbandon(winnerSeat: Seat): void {

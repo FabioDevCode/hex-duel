@@ -28,7 +28,20 @@ export type MatchRecord = {
 export const recordMatchResult = async (record: MatchRecord): Promise<void> => {
   const db = getDb();
   if (!db) return;
+  try {
+    await recordMatchResultInner(db, record);
+  } catch (error: unknown) {
+    console.warn(
+      "[ResultService] match persistence unavailable:",
+      error instanceof Error ? error.message : error,
+    );
+  }
+};
 
+const recordMatchResultInner = async (
+  db: NonNullable<ReturnType<typeof getDb>>,
+  record: MatchRecord,
+): Promise<void> => {
   const winnerId =
     record.outcome.outcome === "WIN" ? record.outcome.winnerPlayerId : null;
 
@@ -87,10 +100,19 @@ export type PlayerStats = {
 export const getPlayerStats = async (playerId: string): Promise<PlayerStats | null> => {
   const db = getDb();
   if (!db) return null;
-  const rows = await db
-    .select({ result: matchPlayerResults.result })
-    .from(matchPlayerResults)
-    .where(eq(matchPlayerResults.playerId, playerId));
+  let rows: { result: string }[];
+  try {
+    rows = await db
+      .select({ result: matchPlayerResults.result })
+      .from(matchPlayerResults)
+      .where(eq(matchPlayerResults.playerId, playerId));
+  } catch (error: unknown) {
+    console.warn(
+      "[ResultService] stats unavailable:",
+      error instanceof Error ? error.message : error,
+    );
+    return null;
+  }
   const stats: PlayerStats = { matchesPlayed: rows.length, wins: 0, losses: 0, draws: 0 };
   for (const row of rows) {
     if (row.result === "WIN") stats.wins += 1;

@@ -68,6 +68,16 @@ export class GameService {
     return { ok: true, order };
   }
 
+  /**
+   * Snapshot of the submitted actions for the reveal phase (MULTIPLAYER_SPEC 8.6).
+   * Missing submissions read as PASS, matching the resolution semantics.
+   */  getRevealedActions(): Record<Seat, PlayerAction> {
+    return {
+      0: this.submitted.get(0)?.action ?? { type: "PASS" },
+      1: this.submitted.get(1)?.action ?? { type: "PASS" },
+    };
+  }
+
   /** Applies PASS to players who did not validate before the deadline (D-024). */
   resolveCurrentTurn(turnNumber: number): TurnResolution {
     const actions: Record<Seat, PlayerAction> = {

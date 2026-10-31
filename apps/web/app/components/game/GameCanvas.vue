@@ -37,11 +37,17 @@ const props = defineProps<{
   playerPositions: [GameVector2, GameVector2];
   localAction: { type: string; direction?: number; target?: GameVector2 } | null;
   interactive: boolean;
+  aimLocked: boolean;
+  resolution: {
+    moves: { seat: 0 | 1; target: GameVector2 }[];
+    attacks: { seat: 0 | 1; type: AttackType; direction: number }[];
+  } | null;
 }>();
 
 const emit = defineEmits<{
   moveTarget: [target: GameVector2];
   attackDirection: [directionDeg: number];
+  aimLockedChange: [locked: boolean];
 }>();
 
 const container = ref<HTMLElement | null>(null);
@@ -223,8 +229,11 @@ const clampMoveDistance = (from: GameVector2, target: GameVector2): GameVector2 
   return { x: from.x + dx * scale, z: from.z + dz * scale };
 };
 
+const isAnimatingResolution = ref(false);
+
 const onMouseMove = (event: MouseEvent): void => {
   if (!container.value || !camera || !renderer || !props.interactive) return;
+  if (props.aimLocked || isAnimatingResolution.value) return;
   const rect = container.value.getBoundingClientRect();
   mouseNDC = new Vector2(
     ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -243,9 +252,16 @@ const onClick = (): void => {
   const action = props.localAction;
   const myPos = props.playerPositions[0];
 
+  // Second click unlocks the frozen aim so it can be adjusted again.
+  if (props.aimLocked) {
+    emit("aimLockedChange", false);
+    return;
+  }
+
   if (action?.type === "MOVE") {
     const clamped = clampMoveDistance(myPos, clampToArena(pointerWorld));
     emit("moveTarget", clamped);
+    emit("aimLockedChange", true);
     return;
   }
 
@@ -255,6 +271,7 @@ const onClick = (): void => {
     if (dx === 0 && dz === 0) return;
     const direction = radToDeg(Math.atan2(dz, dx));
     emit("attackDirection", direction);
+    emit("aimLockedChange", true);
   }
 };
 
@@ -272,7 +289,7 @@ const updateIndicators = (): void => {
   rangeCircle.visible = false;
   moveRangeCircle.visible = false;
 
-  if (!props.interactive || !pointer) return;
+  if (!props.interactive || isAnimatingResolution.value) return;
 
   if (action?.type === "MOVE") {
     // Move range ring around the player
@@ -280,7 +297,9 @@ const updateIndicators = (): void => {
     moveRangeCircle.scale.set(GAME_CONFIG.maxMoveDistance, GAME_CONFIG.maxMoveDistance, 1);
     moveRangeCircle.position.set(myPos.x, 0.6, myPos.z);
 
-    const clamped = clampMoveDistance(myPos, clampToArena(pointer));
+    // When the aim is locked, show the frozen target; otherwise follow the pointer.
+    const frozen = props.aimLocked ? action.target : null;
+    const clamped = frozen ?? clampMoveDistance(myPos, clampToArena(pointer!));
     moveIndicator.visible = true;
     moveIndicator.position.set(clamped.x, 0.6, clamped.z);
 
@@ -296,10 +315,15 @@ const updateIndicators = (): void => {
 
   if (action && action.type !== "MOVE" && action.type !== "PASS") {
     const params = attackParams(action.type as AttackType);
-    const dx = pointer.x - myPos.x;
-    const dz = pointer.z - myPos.z;
-    if (dx === 0 && dz === 0) return;
-    const directionDeg = radToDeg(Math.atan2(dz, dx));
+    const directionDeg = props.aimLocked
+      ? (action.direction ?? 0)
+      : (() => {
+          const p = pointer!;
+          const dx = p.x - myPos.x;
+          const dz = p.z - myPos.z;
+          if (dx === 0 && dz === 0) return 0;
+          return radToDeg(Math.atan2(dz, dx));
+        })();
 
     // Aim indicator along the direction
     const rad = degToRad(directionDeg);
@@ -336,6 +360,7 @@ let animationFrame = 0;
 
 const render = (): void => {
   if (!renderer || !scene || !camera) return;
+  stepResolution();
   renderer.render(scene, camera);
   animationFrame = requestAnimationFrame(render);
 };
@@ -352,6 +377,109 @@ const onResize = (): void => {
 watch(() => props.playerPositions, updateCapsulePositions, { deep: true });
 watch(() => props.localAction, updateIndicators, { deep: true });
 watch(() => props.interactive, updateIndicators);
+
+// --- Resolution phase animation (UI_UX_SPEC 18) ---
+
+type MoveAnim = { seat: 0 | 1; from: GameVector2; to: GameVector2; startedAt: number };
+type AttackAnim = { seat: 0 | 1; type: AttackType; direction: number; cone: Mesh; startedAt: number };
+
+const MOVE_DURATION_MS = 1500;
+const ATTACK_CONE_MS = 1200;
+
+const activeMoves = ref<MoveAnim[]>([]);
+const activeAttacks = ref<AttackAnim[]>([]);
+
+const playResolution = (): void => {
+  if (!scene || !capsules) return;
+  isAnimatingResolution.value = true;
+  hideAllIndicators();
+
+  const moves: MoveAnim[] = [];
+  for (const move of props.resolution?.moves ?? []) {
+    const from: GameVector2 = { ...props.playerPositions[move.seat] };
+    if (from.x === move.target.x && from.z === move.target.z) continue;
+    moves.push({ seat: move.seat, from, to: move.target, startedAt: performance.now() });
+  }
+  activeMoves.value = moves;
+
+  const attacks: AttackAnim[] = [];
+  for (const attack of props.resolution?.attacks ?? []) {
+    const params = attackParams(attack.type);
+    const cone = new Mesh(
+      buildConeWedge(params.angle, params.range),
+      new MeshBasicMaterial({
+        color: attack.seat === 0 ? 0xff4d5a : 0x4d91ff,
+        transparent: true,
+        opacity: 0.45,
+        side: 2,
+      }),
+    );
+    const origin = props.playerPositions[attack.seat];
+    cone.position.set(origin.x, 0.7, origin.z);
+    cone.rotation.y = -degToRad(attack.direction);
+    scene.add(cone);
+    attacks.push({ seat: attack.seat, type: attack.type, direction: attack.direction, cone, startedAt: performance.now() + MOVE_DURATION_MS });
+  }
+  activeAttacks.value = attacks;
+
+  if (moves.length === 0 && attacks.length === 0) {
+    isAnimatingResolution.value = false;
+    return;
+  }
+};
+
+const hideAllIndicators = (): void => {
+  for (const indicator of [aimIndicator, moveIndicator, trajectoryLine, attackCone, rangeCircle, moveRangeCircle]) {
+    if (indicator) indicator.visible = false;
+  }
+};
+
+const stepResolution = (): void => {
+  if (!isAnimatingResolution.value || !capsules) return;
+  const now = performance.now();
+
+  for (const move of activeMoves.value) {
+    const t = Math.min(1, (now - move.startedAt) / MOVE_DURATION_MS);
+    const eased = t * t * (3 - 2 * t);
+    const group = capsules[move.seat];
+    group.position.x = move.from.x + (move.to.x - move.from.x) * eased;
+    group.position.z = move.from.z + (move.to.z - move.from.z) * eased;
+  }
+
+  const remainingAttacks: AttackAnim[] = [];
+  for (const attack of activeAttacks.value) {
+    const elapsed = now - attack.startedAt;
+    if (elapsed < 0) {
+      remainingAttacks.push(attack);
+      continue;
+    }
+    const t = elapsed / ATTACK_CONE_MS;
+    if (t >= 1) {
+      scene?.remove(attack.cone);
+      attack.cone.geometry.dispose();
+      (attack.cone.material as MeshBasicMaterial).dispose();
+      continue;
+    }
+    const material = attack.cone.material as MeshBasicMaterial;
+    material.opacity = 0.45 * (1 - t);
+    remainingAttacks.push(attack);
+  }
+  activeAttacks.value = remainingAttacks;
+
+  const movesDone = activeMoves.value.every(
+    (m) => now - m.startedAt >= MOVE_DURATION_MS,
+  );
+  if (movesDone && remainingAttacks.length === 0) {
+    isAnimatingResolution.value = false;
+  }
+};
+
+watch(
+  () => props.resolution,
+  (value) => {
+    if (value) playResolution();
+  },
+);
 
 onMounted(() => {
   setupScene();

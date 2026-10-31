@@ -5,8 +5,11 @@
         :player-positions="playerPositions"
         :local-action="localAction"
         :interactive="!locked && !!selectedAction"
+        :aim-locked="aimLocked"
+        :resolution="resolution"
         @move-target="onMoveTarget"
         @attack-direction="onAttackDirection"
+        @aim-locked-change="onAimLockedChange"
       />
       <GameHUD
         :turn-number="gameState?.turnNumber ?? 0"
@@ -59,6 +62,11 @@ const { joinById, submitAction, leaveRoom, gameState, mySeat, room } = useGameRo
 const selectedAction = ref<SelectorAction | null>(null);
 const moveTarget = ref<Vector2 | null>(null);
 const attackDirection = ref<number>(0);
+const aimLocked = ref(false);
+const resolution = ref<{
+  moves: { seat: 0 | 1; target: Vector2 }[];
+  attacks: { seat: 0 | 1; type: AttackType; direction: number }[];
+} | null>(null);
 const locked = ref(false);
 const finished = ref(false);
 const gameResult = ref<{ outcome: string; winnerSeat?: number } | null>(null);
@@ -140,9 +148,14 @@ const onAttackDirection = (direction: number): void => {
   attackDirection.value = direction;
 };
 
+const onAimLockedChange = (value: boolean): void => {
+  aimLocked.value = value;
+};
+
 const onSelectAction = (action: SelectorAction): void => {
   if (locked.value) return;
   selectedAction.value = action;
+  aimLocked.value = false;
   if (action === "MOVE") {
     moveTarget.value = { ...playerPositions.value[0] };
   } else if (action !== "PASS") {
@@ -169,6 +182,25 @@ const onConfirm = (): void => {
   locked.value = true;
 };
 
+type RevealedTurn = {
+  actions: { seat: number; action: PlayerAction }[];
+};
+
+const onTurnRevealed = (message: RevealedTurn): void => {
+  const moves: { seat: 0 | 1; target: Vector2 }[] = [];
+  const attacks: { seat: 0 | 1; type: AttackType; direction: number }[] = [];
+  for (const entry of message.actions) {
+    const seat: 0 | 1 = entry.seat === 0 ? 0 : 1;
+    const action = entry.action;
+    if (action.type === "MOVE") {
+      moves.push({ seat, target: action.target });
+    } else if (action.type !== "PASS") {
+      attacks.push({ seat, type: action.type, direction: action.direction });
+    }
+  }
+  resolution.value = { moves, attacks };
+};
+
 const bindMessages = (): void => {
   const r = room.value;
   if (!r) return;
@@ -176,7 +208,10 @@ const bindMessages = (): void => {
     locked.value = false;
     selectedAction.value = null;
     moveTarget.value = null;
+    aimLocked.value = false;
+    resolution.value = null;
   });
+  r.onMessage("turn_revealed", onTurnRevealed);
   r.onMessage("game_finished", (message: { result: { outcome: string; winnerSeat?: number } }) => {
     gameResult.value = message.result;
     finished.value = true;
