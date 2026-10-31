@@ -2,6 +2,8 @@ packages:
   - "apps/*"
   - "packages/*"
 
+minimumReleaseAge: 0
+
 catalog:
   typescript: "^5.9.3"
   vitest: "^3.2.4"
@@ -17,3 +19,7 @@ catalog:
   drizzle-orm: "^0.45.4"
   postgres: "^4.0.0"
   drizzle-kit: "^0.31.11"
+
+allowBuilds:
+  esbuild: true
+  msgpackr-extract: true

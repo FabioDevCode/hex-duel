@@ -2,6 +2,15 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-01-01",
   devtools: { enabled: false },
   css: ["~/assets/css/main.css"],
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@colyseus/sdk',
+        'three',
+        'zod',
+      ]
+    }
+  },
   runtimeConfig: {
     public: {
       serverUrl: process.env.SERVER_URL ?? "ws://localhost:2567",
