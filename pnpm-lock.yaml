@@ -88,7 +88,7 @@ importers:
         version: link:../../packages/shared
       colyseus:
         specifier: 'catalog:'
-        version: 0.18.10(@colyseus/auth@0.18.4)(@colyseus/core@0.18.23)(@colyseus/redis-driver@0.18.7(@colyseus/core@0.18.23))(@colyseus/redis-presence@0.18.6(@colyseus/auth@0.18.4)(@colyseus/better-call@1.3.3(zod@4.6.7))(@colyseus/schema@5.0.43(typescript@5.9.3))(@colyseus/ws-transport@0.18.4)(@pm2/io@6.1.0)(express@5.3.0)(zod@4.6.7))(@colyseus/schema@5.0.43(typescript@5.9.3))(@colyseus/uwebsockets-transport@0.18.4(@colyseus/core@0.18.23))(@colyseus/ws-transport@0.18.4)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15))(zod@4.6.7)
+        version: 0.18.10(@colyseus/auth@0.18.4)(@colyseus/core@0.18.23)(@colyseus/redis-driver@0.18.7(@colyseus/core@0.18.23))(@colyseus/redis-presence@0.18.6(@colyseus/auth@0.18.4)(@colyseus/better-call@1.3.3(zod@4.6.7))(@colyseus/schema@5.0.43(typescript@5.9.3))(@colyseus/ws-transport@0.18.4)(@pm2/io@6.1.0)(express@5.3.0)(zod@4.6.7))(@colyseus/schema@5.0.43(typescript@5.9.3))(@colyseus/uwebsockets-transport@0.18.4(@colyseus/core@0.18.23))(@colyseus/ws-transport@0.18.4)(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15))(zod@4.6.7)
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.4(postgres@4.0.0)
@@ -117,15 +117,15 @@ importers:
 
   apps/web:
     dependencies:
+      '@colyseus/sdk':
+        specifier: ^0.18.9
+        version: 0.18.9(@colyseus/core@0.18.23)(typescript@5.9.3)(zod@4.6.7)
       '@hex-duel/game-logic':
         specifier: workspace:*
         version: link:../../packages/game-logic
       '@hex-duel/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      colyseus.js:
-        specifier: ^0.16.14
-        version: 0.16.22
       three:
         specifier: 'catalog:'
         version: 0.180.0
@@ -395,18 +395,11 @@ packages:
     resolution: {integrity: sha512-2Ned3SnWS2XoxG9I7zy2qbKsaev0aE9+VZrBgg3NrNBVcxJjRba7jscqWs89k7D7tsGCDAa5d17ac0DYviUACA==}
     engines: {node: '>= 22.x'}
 
-  '@colyseus/httpie@2.0.1':
-    resolution: {integrity: sha512-JvABMZzPLiyrUsVj3ElXGORRDTu+NKzXHWd1uV1R1SThAKMm06cVW6bOyADARD65bs8JJoHNNbUkW8KoRvRDzA==}
-    engines: {node: '>=10'}
-
   '@colyseus/monitor@0.18.7':
     resolution: {integrity: sha512-Mu3HK+TwQK79ReLf4gIvQXi9RxKOxnwqoMXiLyzB7krCMzGtveMKYQlI0WkNXreXMhNET0rvYsjqp8a7+XX3Tw==}
     engines: {node: '>= 22.x'}
     peerDependencies:
       '@colyseus/core': 0.18.x
-
-  '@colyseus/msgpackr@1.11.3':
-    resolution: {integrity: sha512-P86w/FrZWUaV7StxI7WuNg3wFlUrROSiBOrF378wyOgxS5+etcxUQMPe0OJZDEx+QUdu7QOPzsqE0Ziqwpjnug==}
 
   '@colyseus/playground@0.18.6':
     resolution: {integrity: sha512-6TVEXp0gJD2JLRajFHugelDZjvDXHNwQkvSgr5MJ34JNBP7j8P/ztQVN1bFLe/1jbrnh0hJev9ct+6ivy11xlw==}
@@ -432,10 +425,6 @@ packages:
     resolution: {integrity: sha512-xNBbyJG+25vbM2RW3FC3a0sQtQ3b5l2mC+LRBHjmHJ3sN7CRBf3gjjfW/xTsZKcC8CAAe97y5kjzPTzeN/7AVg==}
     engines: {node: '>= 22.x'}
 
-  '@colyseus/schema@3.0.76':
-    resolution: {integrity: sha512-i+ceBZyhB7lTn5+BoG/xxYfzW4dKKyLOywsGKVgXHe9fD905AS/Lk180jd1bICEJhebGeiRXEQ2YUPl/xwFg2g==}
-    hasBin: true
-
   '@colyseus/schema@5.0.43':
     resolution: {integrity: sha512-SloPwLS9AWINOT/1YOLlES826PbYgrF+oevxQPXU+AeCxU3slKoAc+GcAx9mETSZsgDKV+XXQP81vSY2KJv7Ng==}
     hasBin: true
@@ -443,6 +432,15 @@ packages:
       typescript: '>=5.0.0'
     peerDependenciesMeta:
       typescript:
+        optional: true
+
+  '@colyseus/sdk@0.18.9':
+    resolution: {integrity: sha512-TZ5ltDW9rQJ6VhEE8AACMxlwLK9FFQJW2kJY3rNPpTD/VOtHH5tBCis1KKFhOQBL/DokYYbLSzVEe+M1Zj7NHw==}
+    engines: {node: '>= 12.x'}
+    peerDependencies:
+      '@colyseus/core': 0.18.x
+    peerDependenciesMeta:
+      '@colyseus/core':
         optional: true
 
   '@colyseus/shared-types@0.18.3':
@@ -2217,10 +2215,6 @@ packages:
 
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
-
-  colyseus.js@0.16.22:
-    resolution: {integrity: sha512-xyiajukHvlwOtcziVbXZWmz7yBH3EImovYrGPAe2kVkdubLVYmOjskJuXh2VLlO8XGjyhmNwig9ELz18sTUo9g==}
-    engines: {node: '>= 12.x'}
 
   colyseus@0.18.10:
     resolution: {integrity: sha512-2bM+oM2sAZTj05XeTtUJTmKOZyFbb8BSx4sJt6aDYIsFaz0REGhrM3BEGgIyw5GRWjd2VgblXX1oAi2tSvOwLA==}
@@ -5030,17 +5024,11 @@ snapshots:
 
   '@colyseus/greeting-banner@4.0.3': {}
 
-  '@colyseus/httpie@2.0.1': {}
-
   '@colyseus/monitor@0.18.7(@colyseus/core@0.18.23)':
     dependencies:
       '@colyseus/core': 0.18.23(@colyseus/auth@0.18.4)(@colyseus/better-call@1.3.3(zod@4.6.7))(@colyseus/schema@5.0.43(typescript@5.9.3))(@colyseus/ws-transport@0.18.4)(@pm2/io@6.1.0)(express@5.3.0)(zod@4.6.7)
       node-os-utils: 2.0.5
       zod: 4.6.7
-
-  '@colyseus/msgpackr@1.11.3':
-    optionalDependencies:
-      msgpackr-extract: 3.0.4
 
   '@colyseus/playground@0.18.6(@colyseus/auth@0.18.4)(@colyseus/core@0.18.23)(zod@4.6.7)':
     dependencies:
@@ -5071,11 +5059,25 @@ snapshots:
       - supports-color
       - zod
 
-  '@colyseus/schema@3.0.76': {}
-
   '@colyseus/schema@5.0.43(typescript@5.9.3)':
     optionalDependencies:
       typescript: 5.9.3
+
+  '@colyseus/sdk@0.18.9(@colyseus/core@0.18.23)(typescript@5.9.3)(zod@4.6.7)':
+    dependencies:
+      '@colyseus/better-call': 1.3.3(zod@4.6.7)
+      '@colyseus/schema': 5.0.43(typescript@5.9.3)
+      '@colyseus/shared-types': 0.18.3
+      msgpackr: 2.1.3
+      tslib: 2.9.1
+      ws: 8.22.1
+    optionalDependencies:
+      '@colyseus/core': 0.18.23(@colyseus/auth@0.18.4)(@colyseus/better-call@1.3.3(zod@4.6.7))(@colyseus/schema@5.0.43(typescript@5.9.3))(@colyseus/ws-transport@0.18.4)(@pm2/io@6.1.0)(express@5.3.0)(zod@4.6.7)
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - zod
 
   '@colyseus/shared-types@0.18.3':
     dependencies:
@@ -6872,18 +6874,7 @@ snapshots:
 
   color-name@1.1.4: {}
 
-  colyseus.js@0.16.22:
-    dependencies:
-      '@colyseus/httpie': 2.0.1
-      '@colyseus/msgpackr': 1.11.3
-      '@colyseus/schema': 3.0.76
-      tslib: 2.9.1
-      ws: 8.22.1
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  colyseus@0.18.10(@colyseus/auth@0.18.4)(@colyseus/core@0.18.23)(@colyseus/redis-driver@0.18.7(@colyseus/core@0.18.23))(@colyseus/redis-presence@0.18.6(@colyseus/auth@0.18.4)(@colyseus/better-call@1.3.3(zod@4.6.7))(@colyseus/schema@5.0.43(typescript@5.9.3))(@colyseus/ws-transport@0.18.4)(@pm2/io@6.1.0)(express@5.3.0)(zod@4.6.7))(@colyseus/schema@5.0.43(typescript@5.9.3))(@colyseus/uwebsockets-transport@0.18.4(@colyseus/core@0.18.23))(@colyseus/ws-transport@0.18.4)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15))(zod@4.6.7):
+  colyseus@0.18.10(@colyseus/auth@0.18.4)(@colyseus/core@0.18.23)(@colyseus/redis-driver@0.18.7(@colyseus/core@0.18.23))(@colyseus/redis-presence@0.18.6(@colyseus/auth@0.18.4)(@colyseus/better-call@1.3.3(zod@4.6.7))(@colyseus/schema@5.0.43(typescript@5.9.3))(@colyseus/ws-transport@0.18.4)(@pm2/io@6.1.0)(express@5.3.0)(zod@4.6.7))(@colyseus/schema@5.0.43(typescript@5.9.3))(@colyseus/uwebsockets-transport@0.18.4(@colyseus/core@0.18.23))(@colyseus/ws-transport@0.18.4)(vite@7.3.7(@types/node@24.19.2)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15))(zod@4.6.7):
     dependencies:
       '@colyseus/auth': 0.18.4(@colyseus/core@0.18.23)(express@5.3.0)(zod@4.6.7)
       '@colyseus/core': 0.18.23(@colyseus/auth@0.18.4)(@colyseus/better-call@1.3.3(zod@4.6.7))(@colyseus/schema@5.0.43(typescript@5.9.3))(@colyseus/ws-transport@0.18.4)(@pm2/io@6.1.0)(express@5.3.0)(zod@4.6.7)
@@ -6896,7 +6887,7 @@ snapshots:
       '@colyseus/uwebsockets-transport': 0.18.4(@colyseus/core@0.18.23)
       '@colyseus/ws-transport': 0.18.4(@colyseus/core@0.18.23)(express@5.3.0)
     optionalDependencies:
-      vite: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)
+      vite: 7.3.7(@types/node@24.19.2)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.23.15)
     transitivePeerDependencies:
       - cpupro
       - supports-color

@@ -36,7 +36,7 @@ onMounted(async () => {
   const playerId = localStorage.getItem("hex-duel-player-id");
   if (!playerId) return;
   try {
-    const response = await fetch(`${config.public.matchmakingUrl}/profile/${playerId}`);
+    const response = await fetch(`${config.public.matchmakingUrl}/api/profile/${playerId}`);
     if (response.ok) {
       stats.value = (await response.json()) as Stats;
     }

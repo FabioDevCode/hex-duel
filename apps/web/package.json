@@ -21,9 +21,9 @@
     "vue-router": "catalog:"
   },
   "dependencies": {
+    "@colyseus/sdk": "^0.18.9",
     "@hex-duel/game-logic": "workspace:*",
     "@hex-duel/shared": "workspace:*",
-    "colyseus.js": "^0.16.14",
     "three": "catalog:"
   }
 }

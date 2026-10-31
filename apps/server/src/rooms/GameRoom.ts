@@ -16,6 +16,7 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
   private playerIds: [string, string] = ["", ""];
   private startedAtMs = Date.now();
   private resultRecorded = false;
+  private turnStartScheduled = false;
 
   override onCreate(options?: { private?: boolean; code?: string }): void {
     this.setState(new GameRoomState());
@@ -58,12 +59,19 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
       typeof options?.sessionId === "string" ? options.sessionId : client.sessionId;
     this.seatBySessionId.set(claimedSession, seat);
 
-    this.send(client, "room_ready", { yourSeat: seat, playerId: guestPlayer.id, displayName: guestPlayer.displayName });
+    this.clock.setTimeout(() => {
+      this.send(client, "room_ready", {
+        yourSeat: seat,
+        playerId: guestPlayer.id,
+        displayName: guestPlayer.displayName,
+      });
 
-    if (this.state.players.length === 2) {
-      this.state.status = "SELECTING";
-      this.startTurn();
-    }
+      if (this.state.players.length === 2 && !this.turnStartScheduled) {
+        this.turnStartScheduled = true;
+        this.state.status = "SELECTING";
+        this.startTurn();
+      }
+    }, 50);
   }
 
   override onLeave(client: Client, code?: number): void {

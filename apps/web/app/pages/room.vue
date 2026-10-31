@@ -36,7 +36,7 @@ const copied = ref(false);
 const errorMessage = ref<string | null>(null);
 
 const createRoom = async (): Promise<void> => {
-  const response = await fetch(`${config.public.matchmakingUrl}/private-room`, {
+  const response = await fetch(`${config.public.matchmakingUrl}/api/private-room`, {
     method: "POST",
   });
   if (!response.ok) {
@@ -55,7 +55,7 @@ const createRoom = async (): Promise<void> => {
 const joinRoom = async (): Promise<void> => {
   const code = joinCode.value.trim().toUpperCase();
   if (code.length < 4) return;
-  const response = await fetch(`${config.public.matchmakingUrl}/private-room`, {
+  const response = await fetch(`${config.public.matchmakingUrl}/api/private-room`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ code }),

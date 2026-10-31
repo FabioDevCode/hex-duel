@@ -9,7 +9,7 @@ export const useMatchmaking = () => {
     isSearching.value = true;
     try {
       const config = useRuntimeConfig();
-      const response = await fetch(`${config.public.matchmakingUrl}/quick-match`, {
+      const response = await fetch(`${config.public.matchmakingUrl}/api/quick-match`, {
         method: "POST",
       });
       if (!response.ok) throw new Error("MATCHMAKING_FAILED");
@@ -21,8 +21,21 @@ export const useMatchmaking = () => {
     }
   };
 
-  const cancel = (): void => {
-    if (room.value) leaveRoom();
+  const cancel = async (): Promise<void> => {
+    if (room.value) {
+      const roomId: string = room.value.roomId;
+      leaveRoom();
+      const config = useRuntimeConfig();
+      try {
+        await fetch(`${config.public.matchmakingUrl}/api/cancel-matchmaking`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ roomId }),
+        });
+      } catch {
+        // Server unreachable: the empty room expires on its own.
+      }
+    }
     isSearching.value = false;
   };
 

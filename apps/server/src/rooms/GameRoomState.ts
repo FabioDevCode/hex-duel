@@ -1,21 +1,27 @@
-import { ArraySchema, Schema, type } from "@colyseus/schema";
+import { schema, t, type SchemaType } from "@colyseus/schema";
 
-export class PlayerSchema extends Schema {
-  @type("uint8") seat = 0;
-  @type("string") id = "";
-  @type("number") x = 0;
-  @type("number") z = 0;
-  @type("uint16") hp = 100;
-  @type("boolean") isAlive = true;
-  @type("boolean") connected = true;
-  @type("boolean") hasValidated = false;
-}
+export const PlayerSchema = schema(
+  {
+    seat: t.uint8().default(0),
+    id: t.string().default(""),
+    x: t.number().default(0),
+    z: t.number().default(0),
+    hp: t.uint16().default(0),
+    isAlive: t.boolean().default(true),
+    connected: t.boolean().default(true),
+    hasValidated: t.boolean().default(false),
+  },
+  "PlayerSchema",
+);
+export type PlayerSchema = SchemaType<typeof PlayerSchema>;
 
-export class GameRoomState extends Schema {
-  @type("string")
-  status: "WAITING" | "SELECTING" | "RESOLVING" | "FINISHED" | "CANCELLED" = "WAITING";
-
-  @type("uint8") turnNumber = 0;
-  @type("number") turnDeadlineAt = 0;
-  @type([PlayerSchema]) players = new ArraySchema<PlayerSchema>();
-}
+export const GameRoomState = schema(
+  {
+    status: t.string().default("WAITING"),
+    turnNumber: t.uint8().default(0),
+    turnDeadlineAt: t.number().default(0),
+    players: t.array(PlayerSchema),
+  },
+  "GameRoomState",
+);
+export type GameRoomState = SchemaType<typeof GameRoomState>;

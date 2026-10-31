@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       serverUrl: process.env.SERVER_URL ?? "ws://localhost:2567",
-      matchmakingUrl: process.env.MATCHMAKING_URL ?? "http://localhost:2567",
+      matchmakingUrl: process.env.MATCHMAKING_URL ?? "http://localhost:2568",
     },
   },
   app: {

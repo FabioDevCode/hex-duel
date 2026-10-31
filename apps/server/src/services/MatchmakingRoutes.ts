@@ -29,7 +29,7 @@ export const handleMatchmakingRequest = async (
   const url = req.url ?? "";
   const method = req.method ?? "GET";
 
-  if (url === "/quick-match" && method === "POST") {
+  if (url === "/api/quick-match" && method === "POST") {
     const available = await matchMaker.findOneRoomAvailable("game", {});
     if (available && !available.private && available.clients < 2) {
       send(res, 200, { roomId: available.roomId });
@@ -40,14 +40,28 @@ export const handleMatchmakingRequest = async (
     return true;
   }
 
-  if (url === "/private-room" && method === "POST") {
+  if (url === "/api/cancel-matchmaking" && method === "POST") {
+    const body = JSON.parse(await readBody(req)) as { roomId?: string };
+    const roomId = body.roomId ?? "";
+    if (roomId) {
+      try {
+        await matchMaker.remoteRoomCall(roomId, "dispose" as never);
+      } catch {
+        // Room already gone: nothing to cancel.
+      }
+    }
+    send(res, 200, { cancelled: true });
+    return true;
+  }
+
+  if (url === "/api/private-room" && method === "POST") {
     const code = generateInvitationCode();
     const created = await matchMaker.createRoom("game", { private: true, code });
     send(res, 200, { roomId: created.roomId, code });
     return true;
   }
 
-  if (url === "/private-room" && method === "PUT") {
+  if (url === "/api/private-room" && method === "PUT") {
     const body = JSON.parse(await readBody(req)) as { code?: string };
     const code = (body.code ?? "").trim().toUpperCase();
     if (code.length < 4) {
