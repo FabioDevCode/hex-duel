@@ -1,7 +1,13 @@
 <template>
   <div class="game-page">
     <ClientOnly>
-      <GameCanvas :player-positions="playerPositions" :local-action="localAction" />
+      <GameCanvas
+        :player-positions="playerPositions"
+        :local-action="localAction"
+        :interactive="!locked && !!selectedAction"
+        @move-target="onMoveTarget"
+        @attack-direction="onAttackDirection"
+      />
       <GameHUD
         :turn-number="gameState?.turnNumber ?? 0"
         :deadline-at="gameState?.turnDeadlineAt ?? 0"
@@ -26,9 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { useGameRoom } from "~/composables/useGameRoom";
-import { useI18n } from "~/composables/useI18n";
-import { GAME_CONFIG, isAttackAction } from "@hex-duel/shared";
+import { GAME_CONFIG } from "@hex-duel/shared";
 import type { AttackType, PlayerAction, Vector2 } from "@hex-duel/shared";
 import GameCanvas from "~/components/game/GameCanvas.vue";
 import GameHUD from "~/components/game/GameHUD.vue";
@@ -37,11 +41,11 @@ import type { SelectorAction } from "~/components/ui/ActionSelector.vue";
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
-const { joinById, submitAction, leaveRoom, gameState, mySeat } = useGameRoom();
+const { joinById, submitAction, leaveRoom, gameState, mySeat, room } = useGameRoom();
 
 const selectedAction = ref<SelectorAction | null>(null);
 const moveTarget = ref<Vector2 | null>(null);
-const attackDirection = ref<number | null>(null);
+const attackDirection = ref<number>(0);
 const locked = ref(false);
 const finished = ref(false);
 const gameResult = ref<{ outcome: string; winnerSeat?: number } | null>(null);
@@ -66,14 +70,14 @@ const localAction = computed(() => {
     return { type: "MOVE", target: moveTarget.value };
   }
   if (selectedAction.value && selectedAction.value !== "MOVE" && selectedAction.value !== "PASS") {
-    return { type: selectedAction.value, direction: attackDirection.value ?? 0 };
+    return { type: selectedAction.value, direction: attackDirection.value };
   }
   return null;
 });
 
 const opponentReady = computed(() => {
   const players = gameState.value?.players;
-  if (!players || !mySeat.value) return false;
+  if (!players || mySeat.value === null) return false;
   const opponent = players.find((p) => p.seat !== mySeat.value);
   return opponent?.hasValidated ?? false;
 });
@@ -87,11 +91,23 @@ const resultTitle = computed(() => {
 
 const turnsPlayed = computed(() => `${gameState.value?.turnNumber ?? 0} / ${GAME_CONFIG.maxTurns}`);
 
+const onMoveTarget = (target: Vector2): void => {
+  if (locked.value) return;
+  moveTarget.value = target;
+};
+
+const onAttackDirection = (direction: number): void => {
+  if (locked.value) return;
+  attackDirection.value = direction;
+};
+
 const onSelectAction = (action: SelectorAction): void => {
   if (locked.value) return;
   selectedAction.value = action;
   if (action === "MOVE") {
-    moveTarget.value = { x: playerPositions.value[0].x, z: playerPositions.value[0].z };
+    moveTarget.value = { ...playerPositions.value[0] };
+  } else if (action !== "PASS") {
+    attackDirection.value = mySeat.value === 1 ? 180 : 0;
   }
 };
 
@@ -105,13 +121,27 @@ const onConfirm = (): void => {
   } else {
     const attack: PlayerAction = {
       type: selectedAction.value as AttackType,
-      direction: attackDirection.value ?? 0,
+      direction: attackDirection.value,
     };
     action = attack;
   }
   actionCounter += 1;
   submitAction(action, `action-${actionCounter}`);
   locked.value = true;
+};
+
+const bindMessages = (): void => {
+  const r = room.value;
+  if (!r) return;
+  r.onMessage("turn_started", () => {
+    locked.value = false;
+    selectedAction.value = null;
+    moveTarget.value = null;
+  });
+  r.onMessage("game_finished", (message: { result: { outcome: string; winnerSeat?: number } }) => {
+    gameResult.value = message.result;
+    finished.value = true;
+  });
 };
 
 const playAgain = (): void => {
@@ -129,6 +159,7 @@ onMounted(async () => {
   if (typeof roomId === "string") {
     try {
       await joinById(roomId);
+      bindMessages();
     } catch {
       router.push("/play");
     }

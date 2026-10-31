@@ -9,14 +9,19 @@
 <script setup lang="ts">
 import { useI18n } from "~/composables/useI18n";
 import { useMatchmaking } from "~/composables/useMatchmaking";
+
 const { t } = useI18n();
-const { cancel } = useMatchmaking();
+const { startQuickMatch, cancel } = useMatchmaking();
 const router = useRouter();
 
 const cancelAndBack = (): void => {
   cancel();
   router.push("/play");
 };
+
+onMounted(() => {
+  startQuickMatch();
+});
 
 onBeforeUnmount(cancel);
 </script>
