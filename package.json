@@ -1,10 +1,22 @@
 {
   "name": "hex-duel",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "pnpm --parallel --filter @hex-duel/web --filter @hex-duel/server dev",
+    "dev:web": "pnpm --filter @hex-duel/web dev",
+    "dev:server": "pnpm --filter @hex-duel/server dev",
     "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
     "test": "pnpm -r test",
-    "typecheck": "pnpm -r typecheck"
+    "test:e2e": "playwright test --pass-with-no-tests"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "eslint": "^9.39.2",
+    "typescript": "catalog:",
+    "typescript-eslint": "^8.46.2",
+    "vitest": "catalog:"
   }
 }
