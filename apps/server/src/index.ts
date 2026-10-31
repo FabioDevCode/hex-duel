@@ -19,7 +19,23 @@ gameServer.define("game", GameRoom);
 
 const apiPort = env.apiPort;
 
+const allowedOrigin = process.env.WEB_URL ?? "http://localhost:3000";
+
+const setCorsHeaders = (req: IncomingMessage, res: ServerResponse): void => {
+  const origin = req.headers.origin;
+  if (origin !== allowedOrigin) return;
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+};
+
 const apiServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
+  setCorsHeaders(req, res);
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
   try {
     if (await handleMatchmakingRequest(req, res)) return;
     if (await handleStatsRequest(req, res)) return;
