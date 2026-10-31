@@ -297,15 +297,17 @@ const updateIndicators = (): void => {
     moveRangeCircle.scale.set(GAME_CONFIG.maxMoveDistance, GAME_CONFIG.maxMoveDistance, 1);
     moveRangeCircle.position.set(myPos.x, 0.6, myPos.z);
 
-    // When the aim is locked, show the frozen target; otherwise follow the pointer.
-    const frozen = props.aimLocked ? action.target : null;
-    const clamped = frozen ?? clampMoveDistance(myPos, clampToArena(pointer!));
+    // When the aim is locked, show the frozen target; otherwise follow the
+    // pointer. Without a pointer yet (no mousemove), only the range ring shows.
+    const frozen = props.aimLocked ? (action.target ?? null) : null;
+    const live = frozen ?? (pointer ? clampMoveDistance(myPos, clampToArena(pointer)) : null);
+    if (!live) return;
     moveIndicator.visible = true;
-    moveIndicator.position.set(clamped.x, 0.6, clamped.z);
+    moveIndicator.position.set(live.x, 0.6, live.z);
 
     const positions = new Float32Array([
       myPos.x, 0.6, myPos.z,
-      clamped.x, 0.6, clamped.z,
+      live.x, 0.6, live.z,
     ]);
     trajectoryLine.geometry.dispose();
     trajectoryLine.geometry = makeLineGeometry(positions);
@@ -318,9 +320,9 @@ const updateIndicators = (): void => {
     const directionDeg = props.aimLocked
       ? (action.direction ?? 0)
       : (() => {
-          const p = pointer!;
-          const dx = p.x - myPos.x;
-          const dz = p.z - myPos.z;
+          if (!pointer) return action.direction ?? 0;
+          const dx = pointer.x - myPos.x;
+          const dz = pointer.z - myPos.z;
           if (dx === 0 && dz === 0) return 0;
           return radToDeg(Math.atan2(dz, dx));
         })();
