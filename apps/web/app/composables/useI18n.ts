@@ -1,8 +1,7 @@
-import { computed, ref } from "vue";
+import { computed, onMounted } from "vue";
+import { useCookie, useState } from "nuxt/app";
 
 export type Locale = "fr" | "en";
-
-const locale = ref<Locale>("en");
 
 const messages: Record<Locale, Record<string, string>> = {
   en: {
@@ -96,19 +95,23 @@ const messages: Record<Locale, Record<string, string>> = {
 };
 
 const STORAGE_KEY = "hex-duel-locale";
+const LOCALE_COOKIE = "hex-duel-locale";
 
-const detectLocale = (): Locale => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === "fr" || stored === "en") return stored;
-  const nav = navigator.language.toLowerCase();
-  if (nav.startsWith("fr")) return "fr";
-  return "en";
-};
+const isLocale = (value: unknown): value is Locale => value === "fr" || value === "en";
 
 export const useI18n = () => {
-  if (import.meta.client && locale.value === "en" && !localStorage.getItem(STORAGE_KEY)) {
-    locale.value = detectLocale();
-    localStorage.setItem(STORAGE_KEY, locale.value);
+  // Request-scoped on the server, shared across components on the client.
+  const locale = useState<Locale>("hex-duel-locale", () => "en");
+  // The cookie is shared between SSR and the client, so the server renders
+  // the same locale the client hydrates with. Without it the whole page
+  // text mismatches during hydration, which crashes Safari in Vue's
+  // mismatch recovery (renderSlot with a null currentRenderingInstance).
+  const cookie = useCookie<Locale | null>(LOCALE_COOKIE, {
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+  if (isLocale(cookie.value)) {
+    locale.value = cookie.value;
   }
 
   const t = (key: string, params?: Record<string, string | number>): string => {
@@ -122,8 +125,24 @@ export const useI18n = () => {
 
   const setLocale = (value: Locale): void => {
     locale.value = value;
+    cookie.value = value;
     if (import.meta.client) localStorage.setItem(STORAGE_KEY, value);
   };
+
+  // First visit (no cookie yet): only detect the browser preference after
+  // hydration so the initial client render matches the server-rendered DOM.
+  if (import.meta.client) {
+    onMounted(() => {
+      if (isLocale(cookie.value)) return;
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const detected = isLocale(stored)
+        ? stored
+        : navigator.language.toLowerCase().startsWith("fr")
+          ? "fr"
+          : "en";
+      setLocale(detected);
+    });
+  }
 
   return { t, locale: computed(() => locale.value), setLocale };
 };

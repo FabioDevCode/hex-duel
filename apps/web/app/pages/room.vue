@@ -1,6 +1,6 @@
 <template>
   <div class="room">
-    <div v-if="!created" class="room-actions">
+    <div class="room-actions">
       <button class="btn btn-primary" @click="createRoom">{{ t("room.create") }}</button>
       <form class="join-form" @submit.prevent="joinRoom">
         <input
@@ -15,12 +15,6 @@
       </form>
       <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     </div>
-    <div v-else class="room-waiting">
-      <p class="waiting">{{ t("room.waiting") }}</p>
-      <p class="code">{{ roomCode }}</p>
-      <button class="btn" @click="copyCode">{{ copied ? t("room.copied") : t("room.copy") }}</button>
-      <button class="btn" @click="cancelRoom">{{ t("matchmaking.cancel") }}</button>
-    </div>
   </div>
 </template>
 
@@ -28,11 +22,7 @@
 import { useI18n } from "~/composables/useI18n";
 const { t } = useI18n();
 const config = useRuntimeConfig();
-const router = useRouter();
-const created = useState("room-created", () => false);
-const roomCode = useState("room-code", () => "");
 const joinCode = ref("");
-const copied = ref(false);
 const errorMessage = ref<string | null>(null);
 
 const createRoom = async (): Promise<void> => {
@@ -47,8 +37,9 @@ const createRoom = async (): Promise<void> => {
     roomId: string;
     code: string;
   };
-  roomCode.value = data.code;
-  created.value = true;
+  // The invitation code is shown on the game page while waiting for the
+  // opponent; sessionStorage survives a page reload there.
+  sessionStorage.setItem(`hex-duel-private-code-${data.roomId}`, data.code);
   await navigateTo(`/game/${data.roomId}`);
 };
 
@@ -75,17 +66,6 @@ const joinRoom = async (): Promise<void> => {
   const data: { roomId: string } = (await response.json()) as { roomId: string };
   await navigateTo(`/game/${data.roomId}`);
 };
-
-const copyCode = async (): Promise<void> => {
-  await navigator.clipboard.writeText(roomCode.value);
-  copied.value = true;
-};
-
-const cancelRoom = (): void => {
-  created.value = false;
-  roomCode.value = "";
-  router.push("/play");
-};
 </script>
 
 <style scoped>
@@ -96,8 +76,7 @@ const cancelRoom = (): void => {
   justify-content: center;
 }
 
-.room-actions,
-.room-waiting {
+.room-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -120,17 +99,6 @@ const cancelRoom = (): void => {
   text-transform: uppercase;
   width: 220px;
   text-align: center;
-}
-
-.code {
-  font-size: 2.5rem;
-  font-weight: 800;
-  letter-spacing: 0.3em;
-  color: var(--accent);
-}
-
-.waiting {
-  color: var(--text-secondary);
 }
 
 .error {

@@ -28,7 +28,7 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     this.onMessage("submit_action", (client, message: unknown) => {
       const parsed = ClientMessageSchema.safeParse(message);
       if (!parsed.success || parsed.data.type !== "submit_action") {
-        this.send(client, "server_error", {
+        client.send("server_error", {
           code: "INVALID_MESSAGE",
           message: "Malformed message.",
         });
@@ -38,7 +38,7 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     });
 
     this.onMessage("ping", (client) => {
-      this.send(client, "pong", {});
+      client.send("pong", {});
     });
   }
 
@@ -60,7 +60,7 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     this.seatBySessionId.set(claimedSession, seat);
 
     this.clock.setTimeout(() => {
-      this.send(client, "room_ready", {
+      client.send("room_ready", {
         yourSeat: seat,
         playerId: guestPlayer.id,
         displayName: guestPlayer.displayName,
@@ -106,14 +106,14 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
   private handleSubmit(client: Client, action: PlayerAction): void {
     const seat = this.seatBySessionId.get(client.sessionId) ?? null;
     if (seat === null) {
-      this.send(client, "server_error", {
+      client.send("server_error", {
         code: "NOT_IN_ROOM",
         message: "Player not found in this room.",
       });
       return;
     }
     if (this.state.status !== "SELECTING") {
-      this.send(client, "server_error", {
+      client.send("server_error", {
         code: "NOT_SELECTING",
         message: "Actions can only be submitted during selection.",
       });
@@ -121,12 +121,12 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     }
     const result = this.game.submit(seat, action);
     if (!result.ok) {
-      this.send(client, "server_error", { code: result.code, message: result.message });
+      client.send("server_error", { code: result.code, message: result.message });
       return;
     }
     const playerState = this.state.players.at(seat);
     if (playerState) playerState.hasValidated = true;
-    this.send(client, "action_accepted", {});
+    client.send("action_accepted", {});
     this.broadcast("player_ready", { seats: [seat] });
     if (this.game.bothValidated()) {
       this.resolveTurn();
@@ -195,7 +195,6 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     if (!idOne || !idTwo) return;
     const players = this.game.getPlayers();
     await recordMatchResult({
-      roomId: this.roomId,
       playerOneId: idOne,
       playerTwoId: idTwo,
       outcome:

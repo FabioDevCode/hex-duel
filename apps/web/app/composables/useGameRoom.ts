@@ -3,21 +3,24 @@ import type { Seat } from "@hex-duel/shared";
 import { useState } from "nuxt/app";
 
 export type SyncedGameRoom = Room<unknown> & {
-  state: {
-    status: string;
-    turnNumber: number;
-    turnDeadlineAt: number;
-    players: {
-      seat: number;
-      id: string;
-      x: number;
-      z: number;
-      hp: number;
-      isAlive: boolean;
-      connected: boolean;
-      hasValidated: boolean;
-    }[];
-  };
+  // Undefined until the first state patch from the server arrives.
+  state?:
+    | {
+        status: string;
+        turnNumber: number;
+        turnDeadlineAt: number;
+        players: {
+          seat: number;
+          id: string;
+          x: number;
+          z: number;
+          hp: number;
+          isAlive: boolean;
+          connected: boolean;
+          hasValidated: boolean;
+        }[];
+      }
+    | undefined;
 };
 
 export type PublicGameState = {
@@ -27,19 +30,29 @@ export type PublicGameState = {
   players: { seat: Seat; x: number; z: number; hp: number; isAlive: boolean; hasValidated: boolean }[];
 };
 
-const toPublicState = (room: SyncedGameRoom): PublicGameState => ({
-  status: room.state.status,
-  turnNumber: room.state.turnNumber,
-  turnDeadlineAt: room.state.turnDeadlineAt,
-  players: room.state.players.map((p) => ({
-    seat: (p.seat === 0 ? 0 : 1) as Seat,
-    x: p.x,
-    z: p.z,
-    hp: p.hp,
-    isAlive: p.isAlive,
-    hasValidated: p.hasValidated,
-  })),
-});
+const toPublicState = (room: SyncedGameRoom): PublicGameState | null => {
+  const state = room.state;
+  // Right after joinById the state schema is still empty: it only becomes
+  // usable when the first patch arrives (players becomes defined).
+  if (!state || !state.players) return null;
+  return {
+    status: state.status,
+    turnNumber: state.turnNumber,
+    turnDeadlineAt: state.turnDeadlineAt,
+    players: state.players.map((p) => ({
+      seat: (p.seat === 0 ? 0 : 1) as Seat,
+      x: p.x,
+      z: p.z,
+      hp: p.hp,
+      isAlive: p.isAlive,
+      hasValidated: p.hasValidated,
+    })),
+  };
+};
+
+// Handlers are bound once per room instance; navigating between pages that
+// both call joinById for the same room must not register them twice.
+const boundRooms = new WeakSet<SyncedGameRoom>();
 
 export const useGameRoom = () => {
   const client = useState<Client | null>("game-client", () => null);
@@ -58,15 +71,29 @@ export const useGameRoom = () => {
 
   const joinById = async (roomId: string): Promise<void> => {
     try {
-      room.value = (await getClient().joinById(roomId)) as SyncedGameRoom;
-      bindRoom(room.value);
-    } catch {
+      // The room may already be joined (Quick Match joins before navigating
+      // to /game/:roomId): reusing it avoids consuming a second seat.
+      const existing = room.value;
+      if (existing && existing.roomId === roomId) {
+        bindRoom(existing);
+        return;
+      }
+      const joined = (await getClient().joinById(roomId)) as SyncedGameRoom;
+      room.value = joined;
+      bindRoom(joined);
+    } catch (error: unknown) {
+      console.error("Failed to join room", roomId, error);
       lastError.value = "ROOM_UNAVAILABLE";
       throw new Error("ROOM_UNAVAILABLE");
     }
   };
 
   const bindRoom = (joined: SyncedGameRoom): void => {
+    if (boundRooms.has(joined)) return;
+    boundRooms.add(joined);
+    // With SDK 0.18 the state is not synchronized yet when joinById
+    // resolves: the first onStateChange (or an already synced state)
+    // provides it.
     gameState.value = toPublicState(joined);
     joined.onStateChange(() => {
       gameState.value = toPublicState(joined);

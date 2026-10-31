@@ -11,7 +11,7 @@ import { useI18n } from "~/composables/useI18n";
 import { useMatchmaking } from "~/composables/useMatchmaking";
 
 const { t } = useI18n();
-const { startQuickMatch, cancel } = useMatchmaking();
+const { startQuickMatch, cancel, isSearching } = useMatchmaking();
 const router = useRouter();
 
 const cancelAndBack = (): void => {
@@ -23,7 +23,14 @@ onMounted(() => {
   startQuickMatch();
 });
 
-onBeforeUnmount(cancel);
+// Only cancel an in-flight search. After a successful Quick Match the room is
+// joined and /game/:roomId is being shown: leaving it here would disconnect
+// the player from the room they just joined.
+onBeforeUnmount(() => {
+  if (isSearching.value) {
+    cancel();
+  }
+});
 </script>
 
 <style scoped>

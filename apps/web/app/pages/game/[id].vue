@@ -27,6 +27,16 @@
           <button class="btn" @click="backToMenu">{{ t("result.backToMenu") }}</button>
         </div>
       </div>
+      <div v-else-if="waitingForOpponent" class="result-overlay panel">
+        <p class="text-secondary">{{ t("room.waiting") }}</p>
+        <p class="invite-code">{{ privateCode }}</p>
+        <div class="result-actions">
+          <button class="btn" @click="copyCode">
+            {{ codeCopied ? t("room.copied") : t("room.copy") }}
+          </button>
+          <button class="btn" @click="cancelPrivateRoom">{{ t("matchmaking.cancel") }}</button>
+        </div>
+      </div>
     </ClientOnly>
   </div>
 </template>
@@ -37,10 +47,13 @@ import type { AttackType, PlayerAction, Vector2 } from "@hex-duel/shared";
 import GameCanvas from "~/components/game/GameCanvas.vue";
 import GameHUD from "~/components/game/GameHUD.vue";
 import type { SelectorAction } from "~/components/ui/ActionSelector.vue";
+import { useI18n } from "~/composables/useI18n";
+import { useMatchmaking } from "~/composables/useMatchmaking";
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
+const { cancel } = useMatchmaking();
 const { joinById, submitAction, leaveRoom, gameState, mySeat, room } = useGameRoom();
 
 const selectedAction = ref<SelectorAction | null>(null);
@@ -49,7 +62,33 @@ const attackDirection = ref<number>(0);
 const locked = ref(false);
 const finished = ref(false);
 const gameResult = ref<{ outcome: string; winnerSeat?: number } | null>(null);
+const privateCode = ref<string | null>(null);
+const codeCopied = ref(false);
 let actionCounter = 0;
+
+// The creator of a private room stores its invitation code before navigating
+// here (room.vue); it is shown until the opponent joins.
+const privateCodeKey = computed(() => {
+  const roomId = route.params.id;
+  return typeof roomId === "string" ? `hex-duel-private-code-${roomId}` : null;
+});
+
+const waitingForOpponent = computed(
+  () =>
+    privateCode.value !== null && !finished.value && (gameState.value?.players.length ?? 0) < 2,
+);
+
+const copyCode = async (): Promise<void> => {
+  if (!privateCode.value) return;
+  await navigator.clipboard.writeText(privateCode.value);
+  codeCopied.value = true;
+};
+
+const cancelPrivateRoom = async (): Promise<void> => {
+  if (privateCodeKey.value) sessionStorage.removeItem(privateCodeKey.value);
+  await cancel();
+  router.push("/play");
+};
 
 const playerPositions = computed<[Vector2, Vector2]>(() => {
   const players = gameState.value?.players;
@@ -157,6 +196,8 @@ const backToMenu = (): void => {
 onMounted(async () => {
   const roomId = route.params.id;
   if (typeof roomId === "string") {
+    const storedCode = sessionStorage.getItem(`hex-duel-private-code-${roomId}`);
+    if (storedCode) privateCode.value = storedCode;
     try {
       await joinById(roomId);
       bindMessages();
@@ -167,6 +208,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  if (privateCodeKey.value) sessionStorage.removeItem(privateCodeKey.value);
   leaveRoom();
 });
 </script>
@@ -193,6 +235,13 @@ onBeforeUnmount(() => {
 .result-title {
   font-size: 2.5rem;
   letter-spacing: 0.15em;
+}
+
+.invite-code {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  color: var(--accent);
 }
 
 .result-actions {

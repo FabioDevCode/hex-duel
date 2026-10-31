@@ -15,6 +15,10 @@ export const useMatchmaking = () => {
       if (!response.ok) throw new Error("MATCHMAKING_FAILED");
       const data: { roomId: string } = (await response.json()) as { roomId: string };
       await joinById(data.roomId);
+      // Stop "searching" before navigating: the page unmounts during
+      // navigateTo, and the unmount hook must not treat the joined room as
+      // an abandoned search (it would leave and dispose the room).
+      isSearching.value = false;
       await navigateTo(`/game/${data.roomId}`);
     } finally {
       isSearching.value = false;
