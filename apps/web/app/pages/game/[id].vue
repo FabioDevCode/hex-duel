@@ -6,6 +6,7 @@
         :local-action="localAction"
         :interactive="!locked && !!selectedAction"
         :aim-locked="aimLocked"
+        :my-seat="mySeat ?? 0"
         :resolution="resolution"
         @move-target="onMoveTarget"
         @attack-direction="onAttackDirection"
@@ -64,9 +65,10 @@ const moveTarget = ref<Vector2 | null>(null);
 const attackDirection = ref<number>(0);
 const aimLocked = ref(false);
 const resolution = ref<{
-  moves: { seat: 0 | 1; target: Vector2 }[];
+  moves: { seat: 0 | 1; from: Vector2; to: Vector2 }[];
   attacks: { seat: 0 | 1; type: AttackType; direction: number }[];
 } | null>(null);
+const revealedAttacks = ref<{ seat: 0 | 1; type: AttackType; direction: number }[]>([]);
 const locked = ref(false);
 const finished = ref(false);
 const gameResult = ref<{ outcome: string; winnerSeat?: number } | null>(null);
@@ -186,19 +188,27 @@ type RevealedTurn = {
   actions: { seat: number; action: PlayerAction }[];
 };
 
+type ResolvedPlayer = {
+  position: Vector2;
+  hp: number;
+  isAlive: boolean;
+};
+
+type ResolvedTurn = {
+  turnNumber: number;
+  players: [ResolvedPlayer, ResolvedPlayer];
+};
+
 const onTurnRevealed = (message: RevealedTurn): void => {
-  const moves: { seat: 0 | 1; target: Vector2 }[] = [];
   const attacks: { seat: 0 | 1; type: AttackType; direction: number }[] = [];
   for (const entry of message.actions) {
     const seat: 0 | 1 = entry.seat === 0 ? 0 : 1;
     const action = entry.action;
-    if (action.type === "MOVE") {
-      moves.push({ seat, target: action.target });
-    } else if (action.type !== "PASS") {
+    if (action.type !== "MOVE" && action.type !== "PASS") {
       attacks.push({ seat, type: action.type, direction: action.direction });
     }
   }
-  resolution.value = { moves, attacks };
+  revealedAttacks.value = attacks;
 };
 
 const bindMessages = (): void => {
@@ -212,6 +222,19 @@ const bindMessages = (): void => {
     resolution.value = null;
   });
   r.onMessage("turn_revealed", onTurnRevealed);
+  r.onMessage("turn_resolved", (message: ResolvedTurn) => {
+    const before = [...playerPositions.value] as [Vector2, Vector2];
+    const moves: { seat: 0 | 1; from: Vector2; to: Vector2 }[] = [];
+    for (const seat of [0, 1] as const) {
+      const resolved = message.players[seat];
+      const from = before[seat];
+      if (from.x !== resolved.position.x || from.z !== resolved.position.z) {
+        moves.push({ seat, from, to: resolved.position });
+      }
+    }
+    resolution.value = { moves, attacks: revealedAttacks.value };
+    revealedAttacks.value = [];
+  });
   r.onMessage("game_finished", (message: { result: { outcome: string; winnerSeat?: number } }) => {
     gameResult.value = message.result;
     finished.value = true;

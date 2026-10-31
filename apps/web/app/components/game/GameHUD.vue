@@ -2,7 +2,7 @@
   <div class="hud">
     <div class="hud-top panel">
       <PlayerStatus
-        :name="players?.[0] ? t('game.you') : t('game.opponent')"
+        :name="mySeat === 0 ? t('game.you') : t('game.opponent')"
         :seat="0"
         :hp="players?.[0]?.hp ?? 0"
       />
@@ -11,7 +11,7 @@
         <TurnTimer v-if="deadlineAt > 0" :deadline-at="deadlineAt" />
       </div>
       <PlayerStatus
-        :name="players?.[1] ? t('game.opponent') : t('game.opponent')"
+        :name="mySeat === 1 ? t('game.you') : t('game.opponent')"
         :seat="1"
         :hp="players?.[1]?.hp ?? 0"
       />

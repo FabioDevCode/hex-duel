@@ -38,8 +38,9 @@ const props = defineProps<{
   localAction: { type: string; direction?: number; target?: GameVector2 } | null;
   interactive: boolean;
   aimLocked: boolean;
+  mySeat: 0 | 1 | null;
   resolution: {
-    moves: { seat: 0 | 1; target: GameVector2 }[];
+    moves: { seat: 0 | 1; from: GameVector2; to: GameVector2 }[];
     attacks: { seat: 0 | 1; type: AttackType; direction: number }[];
   } | null;
 }>();
@@ -250,7 +251,7 @@ const onMouseMove = (event: MouseEvent): void => {
 const onClick = (): void => {
   if (!props.interactive || !pointerWorld) return;
   const action = props.localAction;
-  const myPos = props.playerPositions[0];
+  const myPos = props.playerPositions[props.mySeat ?? 0];
 
   // Second click unlocks the frozen aim so it can be adjusted again.
   if (props.aimLocked) {
@@ -278,7 +279,7 @@ const onClick = (): void => {
 const updateIndicators = (): void => {
   if (!aimIndicator || !moveIndicator || !trajectoryLine || !attackCone || !rangeCircle || !moveRangeCircle) return;
   const action = props.localAction;
-  const myPos = props.playerPositions[0];
+  const myPos = props.playerPositions[props.mySeat ?? 0];
   const pointer = pointerWorld;
 
   // Reset all
@@ -376,7 +377,15 @@ const onResize = (): void => {
   renderer.setSize(width, height);
 };
 
-watch(() => props.playerPositions, updateCapsulePositions, { deep: true });
+watch(
+  () => props.playerPositions,
+  () => {
+    // During the resolution animation the capsules are driven by the lerp;
+    // authoritative positions are applied when it ends.
+    if (!isAnimatingResolution.value) updateCapsulePositions();
+  },
+  { deep: true },
+);
 watch(() => props.localAction, updateIndicators, { deep: true });
 watch(() => props.interactive, updateIndicators);
 
@@ -398,9 +407,8 @@ const playResolution = (): void => {
 
   const moves: MoveAnim[] = [];
   for (const move of props.resolution?.moves ?? []) {
-    const from: GameVector2 = { ...props.playerPositions[move.seat] };
-    if (from.x === move.target.x && from.z === move.target.z) continue;
-    moves.push({ seat: move.seat, from, to: move.target, startedAt: performance.now() });
+    if (move.from.x === move.to.x && move.from.z === move.to.z) continue;
+    moves.push({ seat: move.seat, from: move.from, to: move.to, startedAt: performance.now() });
   }
   activeMoves.value = moves;
 
@@ -473,6 +481,7 @@ const stepResolution = (): void => {
   );
   if (movesDone && remainingAttacks.length === 0) {
     isAnimatingResolution.value = false;
+    updateCapsulePositions();
   }
 };
 
