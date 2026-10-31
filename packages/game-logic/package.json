@@ -10,8 +10,11 @@
   },
   "scripts": {
     "build": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hex-duel/shared": "workspace:*"
   },
   "devDependencies": {
     "@hex-duel/tsconfig": "workspace:*",

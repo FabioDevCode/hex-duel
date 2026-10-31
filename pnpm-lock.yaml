@@ -61,6 +61,10 @@ importers:
         version: 3.2.7
 
   packages/game-logic:
+    dependencies:
+      '@hex-duel/shared':
+        specifier: workspace:*
+        version: link:../shared
     devDependencies:
       '@hex-duel/tsconfig':
         specifier: workspace:*
