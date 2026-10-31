@@ -12,8 +12,12 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
   private turnTimer: ReturnType<typeof setTimeout> | null = null;
   private seatBySessionId = new Map<string, Seat>();
 
-  override onCreate(): void {
+  override onCreate(options?: { private?: boolean; code?: string }): void {
     this.setState(new GameRoomState());
+    if (options?.private) {
+      this.setPrivate(true);
+      this.metadata = { code: options.code ?? null };
+    }
 
     this.onMessage("submit_action", (client, message: unknown) => {
       const parsed = ClientMessageSchema.safeParse(message);

@@ -7,11 +7,23 @@
     "dev": "nuxt dev",
     "build": "nuxt build",
     "test": "vitest run --passWithNoTests",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "nuxt typecheck"
   },
   "devDependencies": {
+    "@golar/vue": "^0.1.11",
     "@hex-duel/tsconfig": "workspace:*",
+    "@types/three": "^0.187.0",
+    "golar": "^0.1.11",
+    "nuxt": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "vue": "catalog:",
+    "vue-router": "catalog:"
+  },
+  "dependencies": {
+    "@hex-duel/game-logic": "workspace:*",
+    "@hex-duel/shared": "workspace:*",
+    "colyseus.js": "^0.16.14",
+    "three": "catalog:"
   }
 }
