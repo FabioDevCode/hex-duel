@@ -71,9 +71,15 @@ export const useGameRoom = () => {
     joined.onStateChange(() => {
       gameState.value = toPublicState(joined);
     });
-    joined.onMessage("room_ready", (message: { yourSeat: Seat }) => {
-      mySeat.value = message.yourSeat;
-    });
+    joined.onMessage(
+      "room_ready",
+      (message: { yourSeat: Seat; playerId?: string }) => {
+        mySeat.value = message.yourSeat;
+        if (message.playerId) {
+          localStorage.setItem("hex-duel-player-id", message.playerId);
+        }
+      },
+    );
     joined.onError(() => {
       lastError.value = "ROOM_ERROR";
     });

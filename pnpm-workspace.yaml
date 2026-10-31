@@ -14,3 +14,6 @@ catalog:
   three: "^0.180.0"
   vue: "^3.5.25"
   vue-router: "^4.6.4"
+  drizzle-orm: "^0.45.4"
+  postgres: "^4.0.0"
+  drizzle-kit: "^0.31.11"

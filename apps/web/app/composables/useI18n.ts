@@ -43,6 +43,11 @@ const messages: Record<Locale, Record<string, string>> = {
     "result.playAgain": "PLAY AGAIN",
     "result.backToMenu": "BACK TO MENU",
     "error.connection": "Connection error. Is the server running?",
+    "profile.matches": "MATCHES",
+    "profile.wins": "WINS",
+    "profile.losses": "LOSSES",
+    "profile.draws": "DRAWS",
+    "profile.noData": "Play a match to see your statistics.",
   },
   fr: {
     "nav.play": "Jouer",
@@ -82,6 +87,11 @@ const messages: Record<Locale, Record<string, string>> = {
     "result.playAgain": "REJOUER",
     "result.backToMenu": "RETOUR AU MENU",
     "error.connection": "Erreur de connexion. Le serveur est-il démarré ?",
+    "profile.matches": "PARTIES",
+    "profile.wins": "VICTOIRES",
+    "profile.losses": "DÉFAITES",
+    "profile.draws": "NULS",
+    "profile.noData": "Jouez une partie pour voir vos statistiques.",
   },
 };
 

@@ -2,6 +2,8 @@ import { ClientMessageSchema, GAME_CONFIG } from "@hex-duel/shared";
 import type { PlayerAction, Seat } from "@hex-duel/shared";
 import { Room, type Client } from "colyseus";
 import { GameService } from "../services/GameService";
+import { recordMatchResult } from "../services/ResultService";
+import { createGuestPlayer } from "../services/PlayerService";
 import { GameRoomState, PlayerSchema } from "./GameRoomState";
 
 const RECONNECTION_SECONDS = Math.ceil(GAME_CONFIG.reconnectGracePeriodMs / 1000);
@@ -11,6 +13,9 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
   private game = new GameService({ 0: "", 1: "" });
   private turnTimer: ReturnType<typeof setTimeout> | null = null;
   private seatBySessionId = new Map<string, Seat>();
+  private playerIds: [string, string] = ["", ""];
+  private startedAtMs = Date.now();
+  private resultRecorded = false;
 
   override onCreate(options?: { private?: boolean; code?: string }): void {
     this.setState(new GameRoomState());
@@ -36,8 +41,10 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     });
   }
 
-  override onJoin(client: Client, options?: { sessionId?: string }): void {
+  override async onJoin(client: Client, options?: { sessionId?: string }): Promise<void> {
     const seat: Seat = this.state.players.length === 0 ? 0 : 1;
+    const guestPlayer = await createGuestPlayer();
+    this.playerIds[seat] = guestPlayer.id;
 
     const player = new PlayerSchema();
     player.seat = seat;
@@ -51,7 +58,7 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
       typeof options?.sessionId === "string" ? options.sessionId : client.sessionId;
     this.seatBySessionId.set(claimedSession, seat);
 
-    this.send(client, "room_ready", { yourSeat: seat });
+    this.send(client, "room_ready", { yourSeat: seat, playerId: guestPlayer.id, displayName: guestPlayer.displayName });
 
     if (this.state.players.length === 2) {
       this.state.status = "SELECTING";
@@ -156,6 +163,7 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     if (resolution.finished && resolution.winner) {
       this.state.status = "FINISHED";
       this.broadcast("game_finished", { result: resolution.winner });
+      void this.recordResult(resolution.winner, resolution.turnNumber, "COMPLETED");
       return;
     }
     this.startTurn();
@@ -165,6 +173,35 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     this.clearTurnTimer();
     this.state.status = "FINISHED";
     this.broadcast("game_finished", { result: { outcome: "WIN", winnerSeat } });
+    void this.recordResult({ outcome: "WIN", winnerSeat }, this.state.turnNumber, "ABANDON");
+  }
+
+  private async recordResult(
+    winner: { outcome: "WIN"; winnerSeat: Seat } | { outcome: "DRAW" },
+    turnCount: number,
+    finishReason: string,
+  ): Promise<void> {
+    if (this.resultRecorded) return;
+    this.resultRecorded = true;
+    const [idOne, idTwo] = this.playerIds;
+    if (!idOne || !idTwo) return;
+    const players = this.game.getPlayers();
+    await recordMatchResult({
+      roomId: this.roomId,
+      playerOneId: idOne,
+      playerTwoId: idTwo,
+      outcome:
+        winner.outcome === "WIN"
+          ? { outcome: "WIN", winnerPlayerId: this.playerIds[winner.winnerSeat] }
+          : { outcome: "DRAW" },
+      turnCount,
+      finishReason,
+      startedAtMs: this.startedAtMs,
+      playerOneHp: players[0].hp,
+      playerTwoHp: players[1].hp,
+    }).catch((error: unknown) => {
+      console.error("Failed to record match result", error);
+    });
   }
 
   private clearTurnTimer(): void {
