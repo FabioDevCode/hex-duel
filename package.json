@@ -1,0 +1,10 @@
+{
+  "name": "hex-duel",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel --filter @hex-duel/web --filter @hex-duel/server dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  }
+}
