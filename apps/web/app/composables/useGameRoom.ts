@@ -119,6 +119,10 @@ export const useGameRoom = () => {
     room.value?.send("submit_action", { type: "submit_action", actionId, action });
   };
 
+  const surrender = (): void => {
+    room.value?.send("surrender", {});
+  };
+
   const leaveRoom = (): void => {
     room.value?.leave(true);
     room.value = null;
@@ -126,5 +130,5 @@ export const useGameRoom = () => {
     mySeat.value = null;
   };
 
-  return { joinById, submitAction, leaveRoom, gameState, mySeat, lastError, room };
+  return { joinById, submitAction, surrender, leaveRoom, gameState, mySeat, lastError, room };
 };

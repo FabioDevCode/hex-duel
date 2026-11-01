@@ -22,6 +22,7 @@
         :my-seat="mySeat"
         @select-action="onSelectAction"
         @confirm="onConfirm"
+        @surrender="onSurrender"
       />
       <p v-if="submitError" class="submit-error">{{ submitError }}</p>
       <div v-if="finished" class="result-overlay panel">
@@ -61,7 +62,7 @@ const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 const { cancel } = useMatchmaking();
-const { joinById, submitAction, leaveRoom, gameState, mySeat, room } = useGameRoom();
+const { joinById, submitAction, surrender, leaveRoom, gameState, mySeat, room } = useGameRoom();
 
 const selectedAction = ref<SelectorAction | null>(null);
 const moveTarget = ref<Vector2 | null>(null);
@@ -161,6 +162,11 @@ const onMoveTarget = (target: Vector2): void => {
 const onAttackDirection = (direction: number): void => {
   if (locked.value) return;
   attackDirection.value = direction;
+};
+
+const onSurrender = (): void => {
+  if (finished.value) return;
+  surrender();
 };
 
 const onAimLockedChange = (value: boolean): void => {

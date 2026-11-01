@@ -25,6 +25,30 @@
       <button class="btn btn-primary" :disabled="locked || !selectedAction" @click="$emit('confirm')">
         {{ locked ? t("game.actionLocked") : t("game.confirm") }}
       </button>
+      <button
+        class="surrender-btn"
+        :title="t('surrender.title')"
+        :aria-label="t('surrender.title')"
+        @click="surrenderOpen = true"
+      >
+        <svg viewBox="0 0 24 24" class="flag-icon" aria-hidden="true">
+          <path d="M6 2v20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path d="M6 3h11l-2.5 3.5L17 10H6z" fill="currentColor" />
+        </svg>
+      </button>
+    </div>
+
+    <div v-if="surrenderOpen" class="modal-backdrop" @click.self="surrenderOpen = false">
+      <div class="modal panel">
+        <h2 class="modal-title">{{ t("surrender.title") }}</h2>
+        <p class="modal-text">{{ t("surrender.text") }}</p>
+        <div class="modal-actions">
+          <button class="btn" @click="surrenderOpen = false">{{ t("surrender.cancel") }}</button>
+          <button class="btn btn-danger" @click="$emit('surrender'); surrenderOpen = false">
+            {{ t("surrender.confirm") }}
+          </button>
+        </div>
+      </div>
     </div>
     <p v-if="opponentReady" class="opponent-status">{{ t("game.opponentReady") }}</p>
     <p v-else class="opponent-status text-secondary">{{ t("game.opponentChoosing") }}</p>
@@ -56,7 +80,10 @@ defineProps<{
 defineEmits<{
   selectAction: [action: SelectorAction];
   confirm: [];
+  surrender: [];
 }>();
+
+const surrenderOpen = ref(false);
 
 export type { AttackType };
 </script>
@@ -102,6 +129,73 @@ export type { AttackType };
   justify-content: center;
   gap: 24px;
   align-self: center;
+}
+
+.surrender-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-main);
+  transition: border-color 0.15s;
+}
+
+.surrender-btn:hover {
+  border-color: var(--error);
+}
+
+.flag-icon {
+  width: 20px;
+  height: 20px;
+  color: #ffffff;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  min-width: 320px;
+  text-align: center;
+}
+
+.modal-title {
+  font-size: 1.2rem;
+  letter-spacing: 0.1em;
+}
+
+.modal-text {
+  color: var(--text-secondary);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-danger {
+  background-color: var(--error);
+  border-color: var(--error);
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #d94a52;
 }
 
 .opponent-status {

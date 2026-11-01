@@ -43,6 +43,14 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     this.onMessage("ping", (client) => {
       client.send("pong", {});
     });
+
+    this.onMessage("surrender", (client) => {
+      if (this.state.status === "FINISHED") return;
+      const seat = this.seatBySessionId.get(client.sessionId) ?? null;
+      if (seat === null) return;
+      const winnerSeat: Seat = seat === 0 ? 1 : 0;
+      this.handleSurrender(winnerSeat);
+    });
   }
 
   override async onJoin(client: Client, options?: { sessionId?: string }): Promise<void> {
@@ -190,6 +198,13 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
       return;
     }
     this.clock.setTimeout(() => this.startTurn(), RESOLUTION_DURATION_MS);
+  }
+
+  private handleSurrender(winnerSeat: Seat): void {
+    this.clearTurnTimer();
+    this.state.status = "FINISHED";
+    this.broadcast("game_finished", { result: { outcome: "WIN", winnerSeat } });
+    void this.recordResult({ outcome: "WIN", winnerSeat }, this.state.turnNumber, "SURRENDER");
   }
 
   private handleAbandon(winnerSeat: Seat): void {
