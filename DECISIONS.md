@@ -159,6 +159,7 @@ Ces valeurs sont les paramètres de référence du GDD, à confirmer par les tes
 | D-092 | Une déconnexion prolongée entraîne une défaite par abandon.                       | ACCEPTED |
 | D-093 | Une action déjà validée ne peut pas être remplacée après reconnexion.             | ACCEPTED |
 | D-094 | Une action non validée devient PASS à l'expiration du timer, conformément au GDD. | ACCEPTED |
+| D-095 | Un joueur peut abandonner volontairement via un bouton dédié (drapeau blanc) avec confirmation. L'abandon met fin à la partie immédiatement et déclare l'adversaire vainqueur. | ACCEPTED |
 
 ---
 
