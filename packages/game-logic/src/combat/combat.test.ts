@@ -5,13 +5,13 @@ import { checkAttack, distanceBetween } from "./calculateAttack";
 import { calculateDamage } from "./calculateDamage";
 import { attackPriority } from "../turns/attackPriority";
 
-const player = (seat: 0 | 1, pos: { x: number; z: number }, hp = 100): PlayerState => ({
+const player = (seat: 0 | 1, pos: { x: number; z: number }, crystals = 3): PlayerState => ({
   id: `p${seat}`,
   seat,
   position: pos,
   orientation: 0,
-  hp,
-  isAlive: hp > 0,
+  crystals,
+  isAlive: crystals > 0,
 });
 
 describe("checkAttack", () => {
@@ -70,20 +70,20 @@ describe("calculateDamage", () => {
   it("applies damage on a hit", () => {
     const outcome = calculateDamage(player(0, { x: 0, z: 0 }), player(1, { x: 2, z: 0 }), "SWEEP", 0);
     expect(outcome.hits).toBe(true);
-    expect(outcome.damage).toBe(GAME_CONFIG.attacks.SWEEP.damage);
-    expect(outcome.targetHpAfter).toBe(75);
+    expect(outcome.crystalsLost).toBe(1);
+    expect(outcome.targetCrystalsAfter).toBe(2);
   });
 
   it("applies zero damage on a miss", () => {
     const outcome = calculateDamage(player(0, { x: 0, z: 0 }), player(1, { x: 10, z: 0 }), "SWEEP", 0);
     expect(outcome.hits).toBe(false);
-    expect(outcome.damage).toBe(0);
-    expect(outcome.targetHpAfter).toBe(100);
+    expect(outcome.crystalsLost).toBe(0);
+    expect(outcome.targetCrystalsAfter).toBe(3);
   });
 
   it("clamps HP at zero", () => {
-    const outcome = calculateDamage(player(0, { x: 0, z: 0 }), player(1, { x: 2, z: 0 }, 10), "SWEEP", 0);
-    expect(outcome.targetHpAfter).toBe(0);
+    const outcome = calculateDamage(player(0, { x: 0, z: 0 }), player(1, { x: 2, z: 0 }, 1), "SWEEP", 0);
+    expect(outcome.targetCrystalsAfter).toBe(0);
     expect(outcome.targetAlive).toBe(false);
   });
 });

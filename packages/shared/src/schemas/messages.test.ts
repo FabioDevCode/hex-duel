@@ -65,7 +65,8 @@ describe("GAME_CONFIG", () => {
   it("matches the accepted GDD values", () => {
     expect(GAME_CONFIG.maxMoveDistance).toBe(3);
     expect(GAME_CONFIG.turnDurationMs).toBe(30_000);
-    expect(GAME_CONFIG.attacks.SNIPER.damage).toBe(40);
+    expect(GAME_CONFIG.maxCrystals).toBe(3);
+    expect(GAME_CONFIG.attacks.SNIPER.range).toBe(12);
   });
 
   it("keeps collisionRadius pending arbitration (P-001)", () => {

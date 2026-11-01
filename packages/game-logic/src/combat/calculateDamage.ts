@@ -7,11 +7,15 @@ export type AttackOutcome = {
   targetSeat: Seat;
   attackType: AttackType;
   hits: boolean;
-  damage: number;
-  targetHpAfter: number;
+  crystalsLost: number;
+  targetCrystalsAfter: number;
   targetAlive: boolean;
 };
 
+/**
+ * A successful attack destroys exactly one crystal. The first player
+ * reduced to 0 crystals is eliminated.
+ */
 export const calculateDamage = (
   attacker: PlayerState,
   target: PlayerState,
@@ -20,15 +24,15 @@ export const calculateDamage = (
 ): AttackOutcome => {
   const params = GAME_CONFIG.attacks[attackType];
   const check = checkAttack(attacker.position, target.position, { type: attackType, direction }, params);
-  const damage = check.hits ? params.damage : 0;
-  const targetHpAfter = Math.max(0, target.hp - damage);
+  const crystalsLost = check.hits ? 1 : 0;
+  const targetCrystalsAfter = Math.max(0, target.crystals - crystalsLost);
   return {
     attackerSeat: attacker.seat,
     targetSeat: target.seat,
     attackType,
     hits: check.hits,
-    damage,
-    targetHpAfter,
-    targetAlive: targetHpAfter > 0,
+    crystalsLost,
+    targetCrystalsAfter,
+    targetAlive: targetCrystalsAfter > 0,
   };
 };

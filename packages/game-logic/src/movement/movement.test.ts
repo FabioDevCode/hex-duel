@@ -13,7 +13,7 @@ const player = (seat: 0 | 1, pos: { x: number; z: number }): PlayerState => ({
   seat,
   position: pos,
   orientation: 0,
-  hp: 100,
+  crystals: 3,
   isAlive: true,
 });
 

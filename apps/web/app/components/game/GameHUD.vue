@@ -4,7 +4,7 @@
       <PlayerStatus
         :name="mySeat === 0 ? t('game.you') : t('game.opponent')"
         :seat="0"
-        :hp="players?.[0]?.hp ?? 0"
+        :crystals="players?.[0]?.crystals ?? 0"
       />
       <div class="hud-center">
         <span class="turn">{{ t("game.turn", { turn: turnNumber, max: GAME_CONFIG.maxTurns }) }}</span>
@@ -13,7 +13,7 @@
       <PlayerStatus
         :name="mySeat === 1 ? t('game.you') : t('game.opponent')"
         :seat="1"
-        :hp="players?.[1]?.hp ?? 0"
+        :crystals="players?.[1]?.crystals ?? 0"
       />
     </div>
     <div class="hud-bottom panel">
@@ -70,7 +70,7 @@ const { t } = useI18n();
 defineProps<{
   turnNumber: number;
   deadlineAt: number;
-  players: { seat: Seat; hp: number; isAlive: boolean; hasValidated: boolean }[] | undefined;
+  players: { seat: Seat; crystals: number; isAlive: boolean; hasValidated: boolean }[] | undefined;
   selectedAction: SelectorAction | null;
   locked: boolean;
   opponentReady: boolean;

@@ -1,5 +1,5 @@
 export const GAME_CONFIG = {
-  maxHp: 100,
+  maxCrystals: 3,
   turnDurationMs: 30_000,
   maxTurns: 30,
   arenaRadius: 12,
@@ -9,17 +9,14 @@ export const GAME_CONFIG = {
     SWEEP: {
       range: 2,
       angle: 180,
-      damage: 25,
     },
     STRIKE: {
       range: 5,
       angle: 90,
-      damage: 30,
     },
     SNIPER: {
       range: 12,
       angle: 10,
-      damage: 40,
     },
   },
   reconnectGracePeriodMs: 30_000,

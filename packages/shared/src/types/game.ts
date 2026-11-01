@@ -5,7 +5,7 @@ export type PlayerState = {
   seat: Seat;
   position: Vector2;
   orientation: Orientation;
-  hp: number;
+  crystals: number;
   isAlive: boolean;
 };
 

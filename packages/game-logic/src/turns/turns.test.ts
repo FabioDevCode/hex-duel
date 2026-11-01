@@ -4,13 +4,13 @@ import { resolveTurn } from "./resolveTurn";
 import { determineWinner } from "./determineWinner";
 import { simulateGame } from "../simulation/gameSimulation";
 
-const player = (seat: 0 | 1, pos: { x: number; z: number }, hp = 100): PlayerState => ({
+const player = (seat: 0 | 1, pos: { x: number; z: number }, crystals = 3): PlayerState => ({
   id: `p${seat}`,
   seat,
   position: pos,
   orientation: 0,
-  hp,
-  isAlive: hp > 0,
+  crystals,
+  isAlive: crystals > 0,
 });
 
 const players = () =>
@@ -42,12 +42,12 @@ describe("resolveTurn", () => {
       1,
     );
     expect(res.attacks[0]?.attackerSeat).toBe(1);
-    expect(res.players[0].hp).toBe(75);
+    expect(res.players[0].crystals).toBe(2);
   });
 
   it("does not execute the second attack when the first eliminates (D-054)", () => {
     const res = resolveTurn(
-      [player(0, { x: -1, z: 0 }, 25), player(1, { x: 1, z: 0 })],
+      [player(0, { x: -1, z: 0 }, 1), player(1, { x: 1, z: 0 })],
       {
         0: { type: "PASS" },
         1: { type: "SWEEP", direction: 180 },
@@ -86,7 +86,7 @@ describe("determineWinner", () => {
 
   it("awards the win by HP at turn 30", () => {
     const res = determineWinner(
-      [player(0, { x: 0, z: 0 }, 80), player(1, { x: 1, z: 0 }, 50)],
+      [player(0, { x: 0, z: 0 }, 2), player(1, { x: 1, z: 0 }, 1)],
       30,
     );
     expect(res.result).toEqual({ outcome: "WIN", winnerSeat: 0 });
@@ -94,7 +94,7 @@ describe("determineWinner", () => {
 
   it("declares a draw on equal HP at turn 30", () => {
     const res = determineWinner(
-      [player(0, { x: 0, z: 0 }, 80), player(1, { x: 1, z: 0 }, 80)],
+      [player(0, { x: 0, z: 0 }, 2), player(1, { x: 1, z: 0 }, 2)],
       30,
     );
     expect(res.result).toEqual({ outcome: "DRAW" });

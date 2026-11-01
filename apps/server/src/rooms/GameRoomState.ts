@@ -6,7 +6,7 @@ export const PlayerSchema = schema(
     id: t.string().default(""),
     x: t.number().default(0),
     z: t.number().default(0),
-    hp: t.uint16().default(0),
+    crystals: t.uint8().default(0),
     isAlive: t.boolean().default(true),
     connected: t.boolean().default(true),
     hasValidated: t.boolean().default(false),

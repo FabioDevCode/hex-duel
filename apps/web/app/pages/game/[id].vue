@@ -209,7 +209,7 @@ type RevealedTurn = {
 
 type ResolvedPlayer = {
   position: Vector2;
-  hp: number;
+  crystals: number;
   isAlive: boolean;
 };
 

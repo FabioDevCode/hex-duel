@@ -64,7 +64,7 @@ export const resolveTurn = (
 
       const outcome = calculateDamage(attacker, target, action.type as AttackType, action.direction);
       attacks.push(outcome);
-      currentPlayers[targetSeat] = { ...target, hp: outcome.targetHpAfter, isAlive: outcome.targetAlive };
+      currentPlayers[targetSeat] = { ...target, crystals: outcome.targetCrystalsAfter, isAlive: outcome.targetAlive };
 
       if (!outcome.targetAlive) break;
     }
@@ -80,7 +80,7 @@ export const resolveTurn = (
     const target = movedPlayers[targetSeat];
     const outcome = calculateDamage(attacker, target, action.type as AttackType, action.direction);
     attacks.push(outcome);
-    movedPlayers[targetSeat] = { ...target, hp: outcome.targetHpAfter, isAlive: outcome.targetAlive };
+    movedPlayers[targetSeat] = { ...target, crystals: outcome.targetCrystalsAfter, isAlive: outcome.targetAlive };
   }
 
   return finish(movedPlayers, turnNumber, attacks, !movement.moved);

@@ -6,8 +6,8 @@ export const determineWinner = (
   turnNumber: number,
 ): { finished: boolean; result: { outcome: "WIN"; winnerSeat: Seat } | { outcome: "DRAW" } | null } => {
   const [p0, p1] = players;
-  const p0Alive = p0.isAlive && p0.hp > 0;
-  const p1Alive = p1.isAlive && p1.hp > 0;
+  const p0Alive = p0.isAlive && p0.crystals > 0;
+  const p1Alive = p1.isAlive && p1.crystals > 0;
 
   if (!p0Alive && !p1Alive) {
     return { finished: true, result: { outcome: "DRAW" } };
@@ -19,12 +19,12 @@ export const determineWinner = (
     return { finished: true, result: { outcome: "WIN", winnerSeat: 0 } };
   }
   if (turnNumber >= GAME_CONFIG.maxTurns) {
-    if (p0.hp === p1.hp) {
+    if (p0.crystals === p1.crystals) {
       return { finished: true, result: { outcome: "DRAW" } };
     }
     return {
       finished: true,
-      result: { outcome: "WIN", winnerSeat: p0.hp > p1.hp ? 0 : 1 },
+      result: { outcome: "WIN", winnerSeat: p0.crystals > p1.crystals ? 0 : 1 },
     };
   }
   return { finished: false, result: null };

@@ -23,7 +23,7 @@ export class GameService {
         seat: 0,
         position: { x: -6, z: 0 },
         orientation: 0,
-        hp: GAME_CONFIG.maxHp,
+        crystals: GAME_CONFIG.maxCrystals,
         isAlive: true,
       },
       {
@@ -31,7 +31,7 @@ export class GameService {
         seat: 1,
         position: { x: 6, z: 0 },
         orientation: 180,
-        hp: GAME_CONFIG.maxHp,
+        crystals: GAME_CONFIG.maxCrystals,
         isAlive: true,
       },
     ];

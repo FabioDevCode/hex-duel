@@ -63,7 +63,7 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     player.id = client.sessionId;
     player.x = seat === 0 ? -6 : 6;
     player.z = 0;
-    player.hp = GAME_CONFIG.maxHp;
+    player.crystals = GAME_CONFIG.maxCrystals;
     this.state.players.push(player);
 
     const claimedSession =
@@ -179,7 +179,7 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
       if (synced && resolved) {
         synced.x = resolved.position.x;
         synced.z = resolved.position.z;
-        synced.hp = resolved.hp;
+        synced.crystals = resolved.crystals;
         synced.isAlive = resolved.isAlive;
       }
     }
@@ -234,8 +234,8 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
       turnCount,
       finishReason,
       startedAtMs: this.startedAtMs,
-      playerOneHp: players[0].hp,
-      playerTwoHp: players[1].hp,
+      playerOneHp: players[0].crystals,
+      playerTwoHp: players[1].crystals,
     }).catch((error: unknown) => {
       console.error("Failed to record match result", error);
     });

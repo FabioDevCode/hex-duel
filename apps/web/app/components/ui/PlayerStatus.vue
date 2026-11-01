@@ -1,26 +1,33 @@
 <template>
   <div class="player-status" :class="seatClass">
     <span class="name">{{ name }}</span>
-    <div class="hp-bar">
-      <div class="hp-fill" :style="{ width: `${hpPercent}%` }" />
+    <div class="crystals">
+      <svg
+        v-for="index in maxCrystals"
+        :key="index"
+        class="crystal"
+        :class="{ lost: index > crystals }"
+        viewBox="0 0 24 32"
+        aria-hidden="true"
+      >
+        <path d="M12 1 L23 16 L12 31 L1 16 Z" />
+      </svg>
     </div>
-    <span class="hp-value">{{ hp }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { GAME_CONFIG } from "@hex-duel/shared";
 
 const props = defineProps<{
   name: string;
   seat: 0 | 1;
-  hp: number;
+  crystals: number;
 }>();
 
+const maxCrystals = GAME_CONFIG.maxCrystals;
 const seatClass = computed(() => (props.seat === 0 ? "seat-0" : "seat-1"));
-const hpPercent = computed(() =>
-  Math.max(0, Math.min(100, (props.hp / GAME_CONFIG.maxHp) * 100)),
-);
 </script>
 
 <style scoped>
@@ -36,31 +43,27 @@ const hpPercent = computed(() =>
   width: 90px;
 }
 
-.hp-bar {
-  flex: 1;
-  height: 10px;
-  background-color: var(--bg-main);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  overflow: hidden;
+.crystals {
+  display: flex;
+  gap: 8px;
 }
 
-.hp-fill {
-  height: 100%;
-  transition: width 0.3s;
+.crystal {
+  width: 18px;
+  height: 24px;
+  transition: opacity 0.3s, transform 0.3s;
 }
 
-.seat-0 .hp-fill {
-  background-color: var(--player-red);
+.seat-0 .crystal path {
+  fill: var(--player-red);
 }
 
-.seat-1 .hp-fill {
-  background-color: var(--player-blue);
+.seat-1 .crystal path {
+  fill: var(--player-blue);
 }
 
-.hp-value {
-  width: 32px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+.crystal.lost {
+  opacity: 0.15;
+  transform: scale(0.85);
 }
 </style>

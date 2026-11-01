@@ -14,7 +14,7 @@ export type SyncedGameRoom = Room<unknown> & {
           id: string;
           x: number;
           z: number;
-          hp: number;
+          crystals: number;
           isAlive: boolean;
           connected: boolean;
           hasValidated: boolean;
@@ -27,7 +27,7 @@ export type PublicGameState = {
   status: string;
   turnNumber: number;
   turnDeadlineAt: number;
-  players: { seat: Seat; x: number; z: number; hp: number; isAlive: boolean; hasValidated: boolean }[];
+  players: { seat: Seat; x: number; z: number; crystals: number; isAlive: boolean; hasValidated: boolean }[];
 };
 
 const toPublicState = (room: SyncedGameRoom): PublicGameState | null => {
@@ -43,7 +43,7 @@ const toPublicState = (room: SyncedGameRoom): PublicGameState | null => {
       seat: (p.seat === 0 ? 0 : 1) as Seat,
       x: p.x,
       z: p.z,
-      hp: p.hp,
+      crystals: p.crystals,
       isAlive: p.isAlive,
       hasValidated: p.hasValidated,
     })),
