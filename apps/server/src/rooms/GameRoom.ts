@@ -129,7 +129,7 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     }
     const playerState = this.state.players.at(seat);
     if (playerState) playerState.hasValidated = true;
-    client.send("action_accepted", {});
+    client.send("action_accepted", { order: result.order });
     this.broadcast("player_ready", { seats: [seat] });
     if (this.game.bothValidated()) {
       this.resolveTurn();

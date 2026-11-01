@@ -23,6 +23,7 @@
         @select-action="onSelectAction"
         @confirm="onConfirm"
       />
+      <p v-if="submitError" class="submit-error">{{ submitError }}</p>
       <div v-if="finished" class="result-overlay panel">
         <h1 class="result-title">{{ resultTitle }}</h1>
         <p class="text-secondary">{{ turnsPlayed }}</p>
@@ -81,6 +82,7 @@ const positionsBeforeTurn = ref<[Vector2, Vector2] | null>(null);
 const locked = ref(false);
 const finished = ref(false);
 const gameResult = ref<{ outcome: string; winnerSeat?: number } | null>(null);
+const submitError = ref<string | null>(null);
 const privateCode = ref<string | null>(null);
 const codeCopied = ref(false);
 let actionCounter = 0;
@@ -167,6 +169,7 @@ const onSelectAction = (action: SelectorAction): void => {
   if (locked.value) return;
   selectedAction.value = action;
   aimLocked.value = false;
+  submitError.value = null;
   if (action === "MOVE") {
     moveTarget.value = { ...playerPositions.value[mySeat.value ?? 0] };
   } else if (action !== "PASS") {
@@ -176,6 +179,7 @@ const onSelectAction = (action: SelectorAction): void => {
 
 const onConfirm = (): void => {
   if (locked.value || !selectedAction.value) return;
+  submitError.value = null;
   let action: PlayerAction;
   if (selectedAction.value === "MOVE" && moveTarget.value) {
     action = { type: "MOVE", target: moveTarget.value };
@@ -288,8 +292,15 @@ const bindMessages = (): void => {
     moveTarget.value = null;
     aimLocked.value = false;
     resolution.value = null;
+    submitError.value = null;
   });
   r.onMessage("turn_revealed", onTurnRevealed);
+  r.onMessage("server_error", (message: { code: string; message: string }) => {
+    // A rejected submission must never leave the player locked out.
+    locked.value = false;
+    aimLocked.value = false;
+    submitError.value = message.message;
+  });
   r.onMessage("turn_resolved", (message: ResolvedTurn) => {
     const before = positionsBeforeTurn.value ?? ([...playerPositions.value] as [Vector2, Vector2]);
     positionsBeforeTurn.value = null;
@@ -345,6 +356,20 @@ onBeforeUnmount(() => {
   position: relative;
   flex: 1;
   overflow: hidden;
+}
+
+.submit-error {
+  position: absolute;
+  bottom: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--error);
+  font-size: 0.9rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--error);
+  border-radius: 6px;
+  padding: 8px 16px;
+  z-index: 5;
 }
 
 .result-overlay {
