@@ -60,8 +60,22 @@ export class GameService {
     if (isAttackAction(action) && !Number.isFinite(action.direction)) {
       return { ok: false, code: "INVALID_ACTION", message: "Invalid attack direction." };
     }
-    if (action.type === "MOVE" && (!Number.isFinite(action.target.x) || !Number.isFinite(action.target.z))) {
-      return { ok: false, code: "INVALID_ACTION", message: "Invalid move target." };
+    if (action.type === "MOVE") {
+      if (!Number.isFinite(action.target.x) || !Number.isFinite(action.target.z)) {
+        return { ok: false, code: "INVALID_ACTION", message: "Invalid move target." };
+      }
+      const from = this.players[seat].position;
+      const dx = action.target.x - from.x;
+      const dz = action.target.z - from.z;
+      const distance = Math.sqrt(dx * dx + dz * dz);
+      const EPSILON = 1e-9;
+      if (distance > GAME_CONFIG.maxMoveDistance + EPSILON) {
+        return {
+          ok: false,
+          code: "MOVE_TOO_FAR",
+          message: `Move distance ${distance.toFixed(2)} exceeds the maximum of ${GAME_CONFIG.maxMoveDistance}.`,
+        };
+      }
     }
     const order = ++this.orderCounter;
     this.submitted.set(seat, { action, order });

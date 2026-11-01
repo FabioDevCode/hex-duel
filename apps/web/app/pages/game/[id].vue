@@ -77,6 +77,7 @@ type RevealedEntry = {
   direction: number | null;
 };
 const revealedEntries = ref<RevealedEntry[]>([]);
+const positionsBeforeTurn = ref<[Vector2, Vector2] | null>(null);
 const locked = ref(false);
 const finished = ref(false);
 const gameResult = ref<{ outcome: string; winnerSeat?: number } | null>(null);
@@ -167,7 +168,7 @@ const onSelectAction = (action: SelectorAction): void => {
   selectedAction.value = action;
   aimLocked.value = false;
   if (action === "MOVE") {
-    moveTarget.value = { ...playerPositions.value[0] };
+    moveTarget.value = { ...playerPositions.value[mySeat.value ?? 0] };
   } else if (action !== "PASS") {
     attackDirection.value = mySeat.value === 1 ? 180 : 0;
   }
@@ -226,6 +227,9 @@ const onTurnRevealed = (message: RevealedTurn): void => {
     }
   }
   revealedEntries.value = entries;
+  // The state patch for this turn has not been applied yet at reveal time,
+  // so the synced positions still hold this turn's starting positions.
+  positionsBeforeTurn.value = [...playerPositions.value] as [Vector2, Vector2];
 };
 
 /**
@@ -287,7 +291,8 @@ const bindMessages = (): void => {
   });
   r.onMessage("turn_revealed", onTurnRevealed);
   r.onMessage("turn_resolved", (message: ResolvedTurn) => {
-    const before = [...playerPositions.value] as [Vector2, Vector2];
+    const before = positionsBeforeTurn.value ?? ([...playerPositions.value] as [Vector2, Vector2]);
+    positionsBeforeTurn.value = null;
     const moveStep = (seat: 0 | 1): ResolutionStep | null => {
       const resolved = message.players[seat];
       const from = before[seat];
