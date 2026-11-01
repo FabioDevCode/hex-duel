@@ -7,7 +7,7 @@ const messages: Record<Locale, Record<string, string>> = {
   en: {
     "nav.play": "Play",
     "nav.profile": "Profile",
-    "home.tagline": "Duel your opponent on the hexagonal arena.",
+    "home.tagline": "Duel your opponent on the arena.",
     "home.play": "PLAY",
     "play.quickMatch": "QUICK MATCH",
     "play.quickMatchDesc": "Find an opponent automatically.",
@@ -51,7 +51,7 @@ const messages: Record<Locale, Record<string, string>> = {
   fr: {
     "nav.play": "Jouer",
     "nav.profile": "Profil",
-    "home.tagline": "Affrontez votre adversaire sur l'arène hexagonale.",
+    "home.tagline": "Affrontez votre adversaire en duel.",
     "home.play": "JOUER",
     "play.quickMatch": "QUICK MATCH",
     "play.quickMatchDesc": "Trouvez automatiquement un adversaire.",

@@ -55,6 +55,8 @@ import type { SelectorAction } from "~/components/ui/ActionSelector.vue";
 import { useI18n } from "~/composables/useI18n";
 import { useMatchmaking } from "~/composables/useMatchmaking";
 
+definePageMeta({ layout: "game" });
+
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();

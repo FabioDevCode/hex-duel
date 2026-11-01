@@ -1,7 +1,9 @@
 <template>
   <div class="layout">
     <header class="layout-header">
-      <NuxtLink to="/" class="logo">HEX DUEL</NuxtLink>
+      <NuxtLink to="/" class="logo">
+        <img src="/img/hex-duel-logo-sm.png" alt="HEX DUEL">
+      </NuxtLink>
       <nav class="layout-nav">
         <NuxtLink to="/play" class="nav-link">{{ t("nav.play") }}</NuxtLink>
         <NuxtLink to="/profile" class="nav-link">{{ t("nav.profile") }}</NuxtLink>
@@ -31,15 +33,20 @@ const { t, locale, setLocale } = useI18n();
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .layout-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px 32px;
-  background-color: var(--bg-secondary);
-  border-bottom: 1px solid var(--border);
+  background-color: transparent;
 }
 
 .logo {
@@ -48,6 +55,11 @@ const { t, locale, setLocale } = useI18n();
   font-size: 1.25rem;
   letter-spacing: 0.12em;
   text-decoration: none;
+}
+
+.logo img {
+  height: 40px;
+  filter: drop-shadow(2px 6px 8px rgba(0, 0, 0, 0.2));
 }
 
 .layout-nav {
@@ -79,5 +91,10 @@ const { t, locale, setLocale } = useI18n();
   flex: 1;
   display: flex;
   flex-direction: column;
+  background-image: url("/img/plaine.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
 }
 </style>
