@@ -7,7 +7,6 @@ import {
   AmbientLight,
   BufferGeometry,
   Float32BufferAttribute,
-  CapsuleGeometry,
   Color,
   ConeGeometry,
   DirectionalLight,
@@ -32,6 +31,7 @@ import {
 import type { AttackType, Vector2 as GameVector2 } from "@hex-duel/shared";
 import { GAME_CONFIG } from "@hex-duel/shared";
 import { buildArenaBounds, isInsideArena } from "@hex-duel/game-logic";
+import { buildCharacter } from "./characterModels";
 
 const props = defineProps<{
   playerPositions: [GameVector2, GameVector2];
@@ -71,7 +71,6 @@ let attackCone: Mesh | null = null;
 let rangeCircle: Mesh | null = null;
 let moveRangeCircle: Mesh | null = null;
 
-const PLAYER_COLORS = [new Color("#ff4d5a"), new Color("#4d91ff")];
 const bounds = buildArenaBounds();
 const EPSILON = 1e-9;
 
@@ -134,12 +133,10 @@ const buildCapsules = (): void => {
   if (!scene) return;
   const groups: [Group, Group] = [new Group(), new Group()];
   for (const seat of [0, 1] as const) {
-    const capsule = new Mesh(
-      new CapsuleGeometry(0.6, 1.4, 8, 16),
-      new MeshStandardMaterial({ color: PLAYER_COLORS[seat] }),
-    );
-    capsule.position.y = 1.4;
-    groups[seat].add(capsule);
+    // Detailed character (red samurai / blue knight), footprint and
+    // height close to the previous capsule (~2.8 units tall).
+    const character = buildCharacter(seat);
+    groups[seat].add(character);
     scene.add(groups[seat]);
   }
   capsules = groups;
