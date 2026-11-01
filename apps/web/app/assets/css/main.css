@@ -109,8 +109,9 @@ button {
         #FD9909,
         #CB5901
     );
-    border: 1px solid #CB5901;
-    color: #151515;
+    /* border: 1px solid #CB5901; */
+    border: 3px solid #170E1A;
+    color: #CB5901;
     font-weight: 600;
     text-shadow: 0 1px 1px #FCF069;
     cursor: pointer;
