@@ -96,7 +96,7 @@ export type { AttackType };
   flex-direction: column;
   justify-content: space-between;
   pointer-events: none;
-  padding: 16px;
+  padding: 8px;
 }
 
 .hud > * {
@@ -107,7 +107,9 @@ export type { AttackType };
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 8px;
+  background-color: transparent;
+  border: 0px solid transparent;
 }
 
 .hud-center {
@@ -121,14 +123,18 @@ export type { AttackType };
   font-size: 0.85rem;
   color: var(--text-secondary);
   letter-spacing: 0.08em;
+  font-weight: 600;
 }
 
 .hud-bottom {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 12px;
   align-self: center;
+  background-color: transparent;
+  padding: 0px;
+  border: 0px solid transparent;
 }
 
 .surrender-btn {
@@ -206,5 +212,6 @@ export type { AttackType };
   font-size: 0.85rem;
   letter-spacing: 0.1em;
   pointer-events: none;
+  font-weight: 600;
 }
 </style>

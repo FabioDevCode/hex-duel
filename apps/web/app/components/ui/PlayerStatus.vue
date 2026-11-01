@@ -38,6 +38,14 @@ const seatClass = computed(() => (props.seat === 0 ? "seat-0" : "seat-1"));
   min-width: 220px;
 }
 
+.player-status.seat-0 {
+  justify-content: start;
+}
+
+.player-status.seat-1 {
+  justify-content: end;
+}
+
 .name {
   font-weight: 600;
   width: 90px;
@@ -52,18 +60,25 @@ const seatClass = computed(() => (props.seat === 0 ? "seat-0" : "seat-1"));
   width: 18px;
   height: 24px;
   transition: opacity 0.3s, transform 0.3s;
+  filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.8));
 }
 
 .seat-0 .crystal path {
   fill: var(--player-red);
+
 }
 
 .seat-1 .crystal path {
   fill: var(--player-blue);
+
 }
 
 .crystal.lost {
-  opacity: 0.15;
+  opacity: 0.95;
   transform: scale(0.85);
+}
+
+.crystal.lost path {
+  fill: var(--crystal-lost);
 }
 </style>
