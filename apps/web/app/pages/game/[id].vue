@@ -64,11 +64,19 @@ const selectedAction = ref<SelectorAction | null>(null);
 const moveTarget = ref<Vector2 | null>(null);
 const attackDirection = ref<number>(0);
 const aimLocked = ref(false);
-const resolution = ref<{
-  moves: { seat: 0 | 1; from: Vector2; to: Vector2 }[];
-  attacks: { seat: 0 | 1; type: AttackType; direction: number }[];
-} | null>(null);
-const revealedAttacks = ref<{ seat: 0 | 1; type: AttackType; direction: number }[]>([]);
+type ResolutionStep =
+  | { kind: "move"; seat: 0 | 1; from: Vector2; to: Vector2 }
+  | { kind: "attack"; seat: 0 | 1; type: AttackType; direction: number };
+
+const resolution = ref<{ steps: ResolutionStep[] } | null>(null);
+type RevealedEntry = {
+  seat: 0 | 1;
+  kind: "move" | "attack";
+  order: number;
+  type: AttackType | null;
+  direction: number | null;
+};
+const revealedEntries = ref<RevealedEntry[]>([]);
 const locked = ref(false);
 const finished = ref(false);
 const gameResult = ref<{ outcome: string; winnerSeat?: number } | null>(null);
@@ -185,7 +193,7 @@ const onConfirm = (): void => {
 };
 
 type RevealedTurn = {
-  actions: { seat: number; action: PlayerAction }[];
+  actions: { seat: number; action: PlayerAction; order?: number }[];
 };
 
 type ResolvedPlayer = {
@@ -200,15 +208,71 @@ type ResolvedTurn = {
 };
 
 const onTurnRevealed = (message: RevealedTurn): void => {
-  const attacks: { seat: 0 | 1; type: AttackType; direction: number }[] = [];
+  const entries: RevealedEntry[] = [];
   for (const entry of message.actions) {
     const seat: 0 | 1 = entry.seat === 0 ? 0 : 1;
     const action = entry.action;
-    if (action.type !== "MOVE" && action.type !== "PASS") {
-      attacks.push({ seat, type: action.type, direction: action.direction });
+    const order = entry.order ?? 0;
+    if (action.type === "MOVE") {
+      entries.push({ seat, kind: "move", order, type: null, direction: null });
+    } else if (action.type !== "PASS") {
+      entries.push({
+        seat,
+        kind: "attack",
+        order,
+        type: action.type,
+        direction: action.direction,
+      });
     }
   }
-  revealedAttacks.value = attacks;
+  revealedEntries.value = entries;
+};
+
+/**
+ * Resolution animation order:
+ * - MOVE vs MOVE: first-validated first
+ * - attack vs attack: first-validated first
+ * - MOVE vs attack: the move always plays first
+ */
+const buildResolutionSteps = (
+  moveStep: (seat: 0 | 1) => ResolutionStep | null,
+  entries: RevealedEntry[],
+): ResolutionStep[] => {
+  const bySeat = new Map(entries.map((e) => [e.seat as 0 | 1, e]));
+  const ordered = [...entries].sort((a, b) => a.order - b.order);
+  const first = ordered[0] ?? null;
+  const second = ordered[1] ?? null;
+  const steps: ResolutionStep[] = [];
+  const pushFor = (entry: RevealedEntry): void => {
+    if (entry.kind === "move") {
+      const step = moveStep(entry.seat);
+      if (step) steps.push(step);
+    } else if (entry.type !== null && entry.direction !== null) {
+      steps.push({
+        kind: "attack",
+        seat: entry.seat,
+        type: entry.type,
+        direction: entry.direction,
+      });
+    }
+  };
+  if (!first) return steps;
+  if (!second) {
+    pushFor(first);
+    return steps;
+  }
+  // Mixed case: the move always plays first, whoever validated first.
+  if (first.kind !== second.kind) {
+    const moveEntry = first.kind === "move" ? first : second;
+    const attackEntry = first.kind === "move" ? second : first;
+    pushFor(moveEntry);
+    pushFor(attackEntry);
+    return steps;
+  }
+  // Same kinds: first-validated first.
+  pushFor(first);
+  pushFor(second);
+  return steps;
 };
 
 const bindMessages = (): void => {
@@ -224,16 +288,16 @@ const bindMessages = (): void => {
   r.onMessage("turn_revealed", onTurnRevealed);
   r.onMessage("turn_resolved", (message: ResolvedTurn) => {
     const before = [...playerPositions.value] as [Vector2, Vector2];
-    const moves: { seat: 0 | 1; from: Vector2; to: Vector2 }[] = [];
-    for (const seat of [0, 1] as const) {
+    const moveStep = (seat: 0 | 1): ResolutionStep | null => {
       const resolved = message.players[seat];
       const from = before[seat];
       if (from.x !== resolved.position.x || from.z !== resolved.position.z) {
-        moves.push({ seat, from, to: resolved.position });
+        return { kind: "move", seat, from, to: resolved.position };
       }
-    }
-    resolution.value = { moves, attacks: revealedAttacks.value };
-    revealedAttacks.value = [];
+      return null;
+    };
+    resolution.value = { steps: buildResolutionSteps(moveStep, revealedEntries.value) };
+    revealedEntries.value = [];
   });
   r.onMessage("game_finished", (message: { result: { outcome: string; winnerSeat?: number } }) => {
     gameResult.value = message.result;

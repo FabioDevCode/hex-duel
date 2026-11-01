@@ -40,8 +40,10 @@ const props = defineProps<{
   aimLocked: boolean;
   mySeat: 0 | 1 | null;
   resolution: {
-    moves: { seat: 0 | 1; from: GameVector2; to: GameVector2 }[];
-    attacks: { seat: 0 | 1; type: AttackType; direction: number }[];
+    steps: (
+      | { kind: "move"; seat: 0 | 1; from: GameVector2; to: GameVector2 }
+      | { kind: "attack"; seat: 0 | 1; type: AttackType; direction: number }
+    )[];
   } | null;
 }>();
 
@@ -390,51 +392,67 @@ watch(() => props.localAction, updateIndicators, { deep: true });
 watch(() => props.interactive, updateIndicators);
 
 // --- Resolution phase animation (UI_UX_SPEC 18) ---
+//
+// Steps are played strictly in the given order:
+// - MOVE vs MOVE: first-validated moves first, then the second
+// - attack vs attack: first-validated attacks first
+// - MOVE vs attack: the move always plays first
+// (the authoritative outcome is already computed by the server;
+// this only sequences the visuals)
 
-type MoveAnim = { seat: 0 | 1; from: GameVector2; to: GameVector2; startedAt: number };
-type AttackAnim = { seat: 0 | 1; type: AttackType; direction: number; cone: Mesh; startedAt: number };
+type ResolutionStep =
+  | { kind: "move"; seat: 0 | 1; from: GameVector2; to: GameVector2 }
+  | { kind: "attack"; seat: 0 | 1; type: AttackType; direction: number };
+
+type ActiveStep =
+  | { kind: "move"; seat: 0 | 1; from: GameVector2; to: GameVector2; startedAt: number }
+  | { kind: "attack"; seat: 0 | 1; cone: Mesh; startedAt: number };
 
 const MOVE_DURATION_MS = 1500;
 const ATTACK_CONE_MS = 1200;
 
-const activeMoves = ref<MoveAnim[]>([]);
-const activeAttacks = ref<AttackAnim[]>([]);
+const queuedSteps = ref<ResolutionStep[]>([]);
+const activeStep = ref<ActiveStep | null>(null);
 
 const playResolution = (): void => {
   if (!scene || !capsules) return;
+  queuedSteps.value = [...(props.resolution?.steps ?? [])];
+  if (queuedSteps.value.length === 0) {
+    isAnimatingResolution.value = false;
+    return;
+  }
   isAnimatingResolution.value = true;
   hideAllIndicators();
+  startNextStep();
+};
 
-  const moves: MoveAnim[] = [];
-  for (const move of props.resolution?.moves ?? []) {
-    if (move.from.x === move.to.x && move.from.z === move.to.z) continue;
-    moves.push({ seat: move.seat, from: move.from, to: move.to, startedAt: performance.now() });
+const startNextStep = (): void => {
+  const next = queuedSteps.value.shift();
+  if (!next) {
+    activeStep.value = null;
+    isAnimatingResolution.value = false;
+    updateCapsulePositions();
+    return;
   }
-  activeMoves.value = moves;
-
-  const attacks: AttackAnim[] = [];
-  for (const attack of props.resolution?.attacks ?? []) {
-    const params = attackParams(attack.type);
+  if (next.kind === "move") {
+    activeStep.value = { ...next, startedAt: performance.now() };
+  } else {
+    if (!scene) return;
+    const params = attackParams(next.type);
     const cone = new Mesh(
       buildConeWedge(params.angle, params.range),
       new MeshBasicMaterial({
-        color: attack.seat === 0 ? 0xff4d5a : 0x4d91ff,
+        color: next.seat === 0 ? 0xff4d5a : 0x4d91ff,
         transparent: true,
         opacity: 0.45,
         side: 2,
       }),
     );
-    const origin = props.playerPositions[attack.seat];
+    const origin = next.kind === "attack" ? props.playerPositions[next.seat] : { x: 0, z: 0 };
     cone.position.set(origin.x, 0.7, origin.z);
-    cone.rotation.y = -degToRad(attack.direction);
+    cone.rotation.y = -degToRad(next.direction);
     scene.add(cone);
-    attacks.push({ seat: attack.seat, type: attack.type, direction: attack.direction, cone, startedAt: performance.now() + MOVE_DURATION_MS });
-  }
-  activeAttacks.value = attacks;
-
-  if (moves.length === 0 && attacks.length === 0) {
-    isAnimatingResolution.value = false;
-    return;
+    activeStep.value = { kind: "attack", seat: next.seat, cone, startedAt: performance.now() };
   }
 };
 
@@ -446,44 +464,32 @@ const hideAllIndicators = (): void => {
 
 const stepResolution = (): void => {
   if (!isAnimatingResolution.value || !capsules) return;
+  const step = activeStep.value;
+  if (!step) return;
   const now = performance.now();
 
-  for (const move of activeMoves.value) {
-    const t = Math.min(1, (now - move.startedAt) / MOVE_DURATION_MS);
+  if (step.kind === "move") {
+    const t = Math.min(1, (now - step.startedAt) / MOVE_DURATION_MS);
     const eased = t * t * (3 - 2 * t);
-    const group = capsules[move.seat];
-    group.position.x = move.from.x + (move.to.x - move.from.x) * eased;
-    group.position.z = move.from.z + (move.to.z - move.from.z) * eased;
+    const group = capsules[step.seat];
+    group.position.x = step.from.x + (step.to.x - step.from.x) * eased;
+    group.position.z = step.from.z + (step.to.z - step.from.z) * eased;
+    if (t >= 1) startNextStep();
+    return;
   }
 
-  const remainingAttacks: AttackAnim[] = [];
-  for (const attack of activeAttacks.value) {
-    const elapsed = now - attack.startedAt;
-    if (elapsed < 0) {
-      remainingAttacks.push(attack);
-      continue;
-    }
-    const t = elapsed / ATTACK_CONE_MS;
-    if (t >= 1) {
-      scene?.remove(attack.cone);
-      attack.cone.geometry.dispose();
-      (attack.cone.material as MeshBasicMaterial).dispose();
-      continue;
-    }
-    const material = attack.cone.material as MeshBasicMaterial;
-    material.opacity = 0.45 * (1 - t);
-    remainingAttacks.push(attack);
+  const t = (now - step.startedAt) / ATTACK_CONE_MS;
+  if (t >= 1) {
+    scene?.remove(step.cone);
+    step.cone.geometry.dispose();
+    (step.cone.material as MeshBasicMaterial).dispose();
+    startNextStep();
+    return;
   }
-  activeAttacks.value = remainingAttacks;
-
-  const movesDone = activeMoves.value.every(
-    (m) => now - m.startedAt >= MOVE_DURATION_MS,
-  );
-  if (movesDone && remainingAttacks.length === 0) {
-    isAnimatingResolution.value = false;
-    updateCapsulePositions();
-  }
+  const material = step.cone.material as MeshBasicMaterial;
+  material.opacity = 0.45 * (1 - t);
 };
+
 
 watch(
   () => props.resolution,

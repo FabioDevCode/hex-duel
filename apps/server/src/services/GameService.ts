@@ -71,11 +71,16 @@ export class GameService {
   /**
    * Snapshot of the submitted actions for the reveal phase (MULTIPLAYER_SPEC 8.6).
    * Missing submissions read as PASS, matching the resolution semantics.
-   */  getRevealedActions(): Record<Seat, PlayerAction> {
-    return {
-      0: this.submitted.get(0)?.action ?? { type: "PASS" },
-      1: this.submitted.get(1)?.action ?? { type: "PASS" },
-    };
+   */  getRevealedActions(): { seat: Seat; action: PlayerAction; order: number }[] {
+    const entries: { seat: Seat; action: PlayerAction; order: number }[] = [];
+    for (const seat of [0, 1] as const) {
+      entries.push({
+        seat,
+        action: this.submitted.get(seat)?.action ?? { type: "PASS" },
+        order: this.submitted.get(seat)?.order ?? 0,
+      });
+    }
+    return entries;
   }
 
   /** Applies PASS to players who did not validate before the deadline (D-024). */

@@ -157,10 +157,11 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     const revealedActions = this.game.getRevealedActions();
     this.broadcast("turn_revealed", {
       turnNumber: this.state.turnNumber,
-      actions: [
-        { seat: 0 as Seat, action: revealedActions[0] },
-        { seat: 1 as Seat, action: revealedActions[1] },
-      ],
+      actions: revealedActions.map((entry) => ({
+        seat: entry.seat,
+        action: entry.action,
+        order: entry.order,
+      })),
     });
 
     const resolution = this.game.resolveCurrentTurn(this.state.turnNumber);
