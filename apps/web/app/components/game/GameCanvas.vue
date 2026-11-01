@@ -90,13 +90,14 @@ const setupScene = (): void => {
   if (!container.value) return;
 
   scene = new Scene();
-  scene.background = new Color("#101218");
 
   camera = new PerspectiveCamera(45, 16 / 9, 0.1, 200);
   camera.position.set(0, 30, 24);
   camera.lookAt(0, 0, 0);
 
-  renderer = new WebGLRenderer({ antialias: true });
+  // Transparent canvas: the page background image (terrain) shows through.
+  renderer = new WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setClearColor(0x000000, 0);
   renderer.setSize(container.value.clientWidth, container.value.clientHeight);
   container.value.appendChild(renderer.domElement);
 

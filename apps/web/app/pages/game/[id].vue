@@ -1,5 +1,6 @@
 <template>
   <div class="game-page">
+    <div class="game-bg" aria-hidden="true" />
     <ClientOnly>
       <GameCanvas
         :player-positions="playerPositions"
@@ -362,6 +363,14 @@ onBeforeUnmount(() => {
   position: relative;
   flex: 1;
   overflow: hidden;
+}
+
+.game-bg {
+  position: absolute;
+  inset: 0;
+  background: url("/img/terrain-combat.png") center / cover no-repeat;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .submit-error {
