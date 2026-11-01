@@ -37,9 +37,9 @@ test("two browser contexts join the same private room and play a turn", async ({
   await expect(creator.getByText(/TURN 1 \/ 30/i)).toBeVisible({ timeout: 15_000 });
   await expect(joiner.getByText(/TURN 1 \/ 30/i)).toBeVisible({ timeout: 15_000 });
 
-  // Each player selects PASS and confirms (secret, simultaneous).
+  // Each player selects an attack and confirms (secret, simultaneous).
   for (const player of [creator, joiner]) {
-    await player.getByRole("button", { name: /^PASS$/i }).click();
+    await player.getByRole("button", { name: /^SWEEP$/i }).click();
     await player.getByRole("button", { name: /CONFIRM|VALIDER/i }).click();
     await expect(player.getByText(/ACTION LOCKED|ACTION VERROUILLÉE/i)).toBeVisible();
   }

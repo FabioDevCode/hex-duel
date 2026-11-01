@@ -64,18 +64,19 @@ export class GameService {
       if (!Number.isFinite(action.target.x) || !Number.isFinite(action.target.z)) {
         return { ok: false, code: "INVALID_ACTION", message: "Invalid move target." };
       }
+      // A click beyond the maximum range is clamped to it (no rejection):
+      // the player intent (direction) is preserved and the move always plays.
       const from = this.players[seat].position;
       const dx = action.target.x - from.x;
       const dz = action.target.z - from.z;
       const distance = Math.sqrt(dx * dx + dz * dz);
       const EPSILON = 1e-9;
+      let target = action.target;
       if (distance > GAME_CONFIG.maxMoveDistance + EPSILON) {
-        return {
-          ok: false,
-          code: "MOVE_TOO_FAR",
-          message: `Move distance ${distance.toFixed(2)} exceeds the maximum of ${GAME_CONFIG.maxMoveDistance}.`,
-        };
+        const scale = GAME_CONFIG.maxMoveDistance / distance;
+        target = { x: from.x + dx * scale, z: from.z + dz * scale };
       }
+      action = { ...action, target };
     }
     const order = ++this.orderCounter;
     this.submitted.set(seat, { action, order });

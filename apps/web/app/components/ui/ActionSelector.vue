@@ -21,7 +21,7 @@ import { useI18n } from "~/composables/useI18n";
 import { GAME_CONFIG } from "@hex-duel/shared";
 import type { AttackType, PlayerAction } from "@hex-duel/shared";
 
-export type SelectorAction = "MOVE" | AttackType | "PASS";
+export type SelectorAction = "MOVE" | AttackType;
 
 const { t } = useI18n();
 
@@ -39,7 +39,6 @@ const ACTIONS: { id: SelectorAction; labelKey: string; desc: string }[] = [
   { id: "SWEEP", labelKey: "game.sweep", desc: `${a.SWEEP.range}/${a.SWEEP.angle}°/${a.SWEEP.damage}` },
   { id: "STRIKE", labelKey: "game.strike", desc: `${a.STRIKE.range}/${a.STRIKE.angle}°/${a.STRIKE.damage}` },
   { id: "SNIPER", labelKey: "game.sniper", desc: `${a.SNIPER.range}/${a.SNIPER.angle}°/${a.SNIPER.damage}` },
-  { id: "PASS", labelKey: "game.pass", desc: "—" },
 ];
 
 export type { PlayerAction };

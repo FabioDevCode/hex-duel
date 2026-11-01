@@ -27,6 +27,16 @@ describe("GameService", () => {
     expect(game.hasValidated(0)).toBe(false);
   });
 
+  it("clamps an out-of-range MOVE to the maximum distance instead of rejecting", () => {
+    const game = new GameService({ 0: "a", 1: "b" });
+    const result = game.submit(0, { type: "MOVE", target: { x: -12, z: 0 } });
+    expect(result.ok).toBe(true);
+    const resolution = game.resolveCurrentTurn(1);
+    // From (-6,0) toward (-12,0): 6 units requested, clamped to 3 -> (-9,0)
+    expect(resolution.players[0].position.x).toBe(-9);
+    expect(resolution.players[0].position.z).toBe(0);
+  });
+
   it("applies PASS to missing submissions at resolution (D-024)", () => {
     const game = new GameService({ 0: "a", 1: "b" });
     game.submit(0, { type: "PASS" });

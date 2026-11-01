@@ -129,7 +129,7 @@ const localAction = computed(() => {
   if (selectedAction.value === "MOVE" && moveTarget.value) {
     return { type: "MOVE", target: moveTarget.value };
   }
-  if (selectedAction.value && selectedAction.value !== "MOVE" && selectedAction.value !== "PASS") {
+  if (selectedAction.value && selectedAction.value !== "MOVE") {
     return { type: selectedAction.value, direction: attackDirection.value };
   }
   return null;
@@ -172,7 +172,7 @@ const onSelectAction = (action: SelectorAction): void => {
   submitError.value = null;
   if (action === "MOVE") {
     moveTarget.value = { ...playerPositions.value[mySeat.value ?? 0] };
-  } else if (action !== "PASS") {
+  } else {
     attackDirection.value = mySeat.value === 1 ? 180 : 0;
   }
 };
@@ -183,8 +183,6 @@ const onConfirm = (): void => {
   let action: PlayerAction;
   if (selectedAction.value === "MOVE" && moveTarget.value) {
     action = { type: "MOVE", target: moveTarget.value };
-  } else if (selectedAction.value === "PASS") {
-    action = { type: "PASS" };
   } else {
     const attack: PlayerAction = {
       type: selectedAction.value as AttackType,
