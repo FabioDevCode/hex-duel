@@ -57,7 +57,7 @@ const messages: Record<Locale, Record<string, string>> = {
     "nav.profile": "Profil",
     "home.tagline": "Affrontez votre adversaire en duel.",
     "home.play": "JOUER",
-    "play.quickMatch": "QUICK MATCH",
+    "play.quickMatch": "MATCH RAPIDE",
     "play.quickMatchDesc": "Trouvez automatiquement un adversaire.",
     "play.privateRoom": "SALON PRIVÉ",
     "play.privateRoomDesc": "Créez ou rejoignez un salon privé avec un code.",

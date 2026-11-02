@@ -44,12 +44,6 @@ const { t, locale, setLocale } = useI18n();
   height: 40px;
 }
 
-.layout-nav {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
 .nav-link {
   color: var(--text-secondary);
   text-decoration: none;

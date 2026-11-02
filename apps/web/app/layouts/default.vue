@@ -5,7 +5,7 @@
         <img src="/img/hex-duel-logo-sm.png" alt="HEX DUEL">
       </NuxtLink>
       <nav class="layout-nav">
-        <NuxtLink to="/play" class="nav-link">{{ t("nav.play") }}</NuxtLink>
+        <!-- <NuxtLink to="/play" class="nav-link">{{ t("nav.play") }}</NuxtLink> -->
         <NuxtLink to="/profile" class="nav-link">{{ t("nav.profile") }}</NuxtLink>
         <select
           class="lang-select"
