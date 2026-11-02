@@ -60,10 +60,10 @@ const brokenSrc = "/img/crystal-broken-hex.png";
 }
 
 .crystal {
-  width: 18px;
-  height: 24px;
+  width: auto;
+  height: 42px;
   transition: opacity 0.3s, transform 0.3s;
-  filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.8));
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.8));
 }
 
 .seat-0 .crystal path {

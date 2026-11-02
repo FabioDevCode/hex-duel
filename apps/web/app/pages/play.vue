@@ -60,7 +60,8 @@ const { t } = useI18n();
   font-family: "Noto Sans", Verdana, sans-serif;
   max-width: 320px;
   font-size: 1em;
-  border-radius: 10px;
+  border-radius: 16px;
+  corner-shape: scoop;
   height: max-content;
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(110, 80, 20, 0.4),
       inset 0 -2px 5px 1px rgba(203, 89, 1, 1),
@@ -75,7 +76,7 @@ const { t } = useI18n();
       #CB5901
   );
   border: 4px solid #170E1A;
-  color: #CB5901;
+  color: #ac4a00;
   font-weight: 600;
   text-shadow: 0 1px 1px #FCF069;
   cursor: pointer;
