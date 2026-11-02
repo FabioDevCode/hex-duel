@@ -2,16 +2,15 @@
   <div class="player-status" :class="seatClass">
     <span class="name">{{ name }}</span>
     <div class="crystals">
-      <svg
+      <img
         v-for="index in maxCrystals"
         :key="index"
         class="crystal"
         :class="{ lost: index > crystals }"
-        viewBox="0 0 24 32"
-        aria-hidden="true"
+        :src="index > crystals ? brokenSrc : crystalSrc"
+        alt=""
+        draggable="false"
       >
-        <path d="M12 1 L23 16 L12 31 L1 16 Z" />
-      </svg>
     </div>
   </div>
 </template>
@@ -28,6 +27,10 @@ const props = defineProps<{
 
 const maxCrystals = GAME_CONFIG.maxCrystals;
 const seatClass = computed(() => (props.seat === 0 ? "seat-0" : "seat-1"));
+const crystalSrc = computed(() =>
+  props.seat === 0 ? "/img/crystal-red-hex.png" : "/img/crystal-blue-hex.png",
+);
+const brokenSrc = "/img/crystal-broken-hex.png";
 </script>
 
 <style scoped>
