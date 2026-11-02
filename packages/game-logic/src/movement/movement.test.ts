@@ -23,8 +23,8 @@ describe("calculateMovement", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("rejects a move too far (> 3 units)", () => {
-    const result = calculateMovement({ x: 0, z: 0 }, { x: 4, z: 0 }, inside);
+  it("rejects a move too far (> 5 units)", () => {
+    const result = calculateMovement({ x: 0, z: 0 }, { x: 6, z: 0 }, inside);
     expect(result).toEqual({ ok: false, error: "TOO_FAR" });
   });
 

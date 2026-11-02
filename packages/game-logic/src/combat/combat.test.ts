@@ -31,11 +31,11 @@ describe("checkAttack", () => {
   });
 
   it("misses a target out of range", () => {
-    const params = GAME_CONFIG.attacks.SWEEP;
+    const params = GAME_CONFIG.attacks.STRIKE;
     const check = checkAttack(
       { x: 0, z: 0 },
-      { x: 3, z: 0 },
-      { type: "SWEEP", direction: 0 },
+      { x: 6, z: 0 },
+      { type: "STRIKE", direction: 0 },
       params,
     );
     expect(check.inRange).toBe(false);
@@ -58,7 +58,7 @@ describe("checkAttack", () => {
     const params = GAME_CONFIG.attacks.SNIPER;
     const check = checkAttack(
       { x: 0, z: 0 },
-      { x: 10, z: 0.4 },
+      { x: 9.9, z: 0.2 },
       { type: "SNIPER", direction: 0 },
       params,
     );
@@ -68,21 +68,21 @@ describe("checkAttack", () => {
 
 describe("calculateDamage", () => {
   it("applies damage on a hit", () => {
-    const outcome = calculateDamage(player(0, { x: 0, z: 0 }), player(1, { x: 2, z: 0 }), "SWEEP", 0);
+    const outcome = calculateDamage(player(0, { x: 0, z: 0 }), player(1, { x: 2, z: 0 }), "STRIKE", 0);
     expect(outcome.hits).toBe(true);
     expect(outcome.crystalsLost).toBe(1);
     expect(outcome.targetCrystalsAfter).toBe(2);
   });
 
   it("applies zero damage on a miss", () => {
-    const outcome = calculateDamage(player(0, { x: 0, z: 0 }), player(1, { x: 10, z: 0 }), "SWEEP", 0);
+    const outcome = calculateDamage(player(0, { x: 0, z: 0 }), player(1, { x: 10, z: 0 }), "STRIKE", 0);
     expect(outcome.hits).toBe(false);
     expect(outcome.crystalsLost).toBe(0);
     expect(outcome.targetCrystalsAfter).toBe(3);
   });
 
   it("clamps HP at zero", () => {
-    const outcome = calculateDamage(player(0, { x: 0, z: 0 }), player(1, { x: 2, z: 0 }, 1), "SWEEP", 0);
+    const outcome = calculateDamage(player(0, { x: 0, z: 0 }), player(1, { x: 2, z: 0 }, 1), "STRIKE", 0);
     expect(outcome.targetCrystalsAfter).toBe(0);
     expect(outcome.targetAlive).toBe(false);
   });

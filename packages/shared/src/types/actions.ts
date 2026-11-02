@@ -1,6 +1,6 @@
 import type { Vector2 } from "./geometry";
 
-export type AttackType = "SWEEP" | "STRIKE" | "SNIPER";
+export type AttackType = "STRIKE" | "SNIPER";
 
 export type MoveAction = {
   type: "MOVE";
@@ -19,7 +19,7 @@ export type PassAction = {
 export type PlayerAction = MoveAction | AttackAction | PassAction;
 
 export const isAttackAction = (action: PlayerAction): action is AttackAction =>
-  action.type === "SWEEP" || action.type === "STRIKE" || action.type === "SNIPER";
+  action.type === "STRIKE" || action.type === "SNIPER";
 
 export const isMoveAction = (action: PlayerAction): action is MoveAction =>
   action.type === "MOVE";

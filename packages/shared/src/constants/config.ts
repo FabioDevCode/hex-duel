@@ -3,19 +3,15 @@ export const GAME_CONFIG = {
   turnDurationMs: 30_000,
   maxTurns: 30,
   arenaRadius: 12,
-  maxMoveDistance: 3,
+  maxMoveDistance: 5,
   collisionRadius: 0,
   attacks: {
-    SWEEP: {
-      range: 2,
-      angle: 180,
-    },
     STRIKE: {
       range: 5,
       angle: 90,
     },
     SNIPER: {
-      range: 12,
+      range: 10,
       angle: 10,
     },
   },

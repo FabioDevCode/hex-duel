@@ -12,8 +12,8 @@ describe("PlayerActionSchema", () => {
     expect(PlayerActionSchema.parse(action)).toEqual(action);
   });
 
-  it("accepts a valid SWEEP attack", () => {
-    const action = { type: "SWEEP", direction: 90 };
+  it("accepts a valid STRIKE attack", () => {
+    const action = { type: "STRIKE", direction: 90 };
     expect(PlayerActionSchema.parse(action)).toEqual(action);
   });
 
@@ -63,10 +63,10 @@ describe("ClientMessageSchema", () => {
 
 describe("GAME_CONFIG", () => {
   it("matches the accepted GDD values", () => {
-    expect(GAME_CONFIG.maxMoveDistance).toBe(3);
+    expect(GAME_CONFIG.maxMoveDistance).toBe(5);
     expect(GAME_CONFIG.turnDurationMs).toBe(30_000);
     expect(GAME_CONFIG.maxCrystals).toBe(3);
-    expect(GAME_CONFIG.attacks.SNIPER.range).toBe(12);
+    expect(GAME_CONFIG.attacks.SNIPER.range).toBe(10);
   });
 
   it("keeps collisionRadius pending arbitration (P-001)", () => {

@@ -7,7 +7,7 @@ export const Vector2Schema = z.object({
 
 export const SeatSchema = z.union([z.literal(0), z.literal(1)]);
 
-export const AttackTypeSchema = z.enum(["SWEEP", "STRIKE", "SNIPER"]);
+export const AttackTypeSchema = z.enum(["STRIKE", "SNIPER"]);
 
 export const MoveActionSchema = z.object({
   type: z.literal("MOVE"),

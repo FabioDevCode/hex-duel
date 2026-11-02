@@ -39,7 +39,7 @@ test("two browser contexts join the same private room and play a turn", async ({
 
   // Each player selects an attack and confirms (secret, simultaneous).
   for (const player of [creator, joiner]) {
-    await player.getByRole("button", { name: /^SWEEP$/i }).click();
+    await player.getByRole("button", { name: /^STRIKE$/i }).click();
     await player.getByRole("button", { name: /CONFIRM|VALIDER/i }).click();
     await expect(player.getByText(/ACTION LOCKED|ACTION VERROUILLÉE/i)).toBeVisible();
   }
@@ -67,7 +67,7 @@ test("opponent indicator stays neutral before reveal", async ({ browser }) => {
   // Opponent status shows only neutral wording, never the action content.
   await expect(creator.getByText(/OPPONENT CHOOSING|ADVERSAIRE EN COURS/i)).toBeVisible();
   const hudText = await creator.locator(".hud").innerText();
-  expect(hudText).not.toMatch(/SWEEP|STRIKE|SNIPER.*direction/i);
+  expect(hudText).not.toMatch(/STRIKE|SNIPER.*direction/i);
 
   await creatorContext.close();
   await joinerContext.close();

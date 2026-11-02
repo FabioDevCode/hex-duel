@@ -35,8 +35,8 @@ describe("resolveTurn", () => {
     const res = resolveTurn(
       [player(0, { x: -1, z: 0 }), player(1, { x: 1, z: 0 })],
       {
-        0: { type: "SWEEP", direction: 0 },
-        1: { type: "SWEEP", direction: 180 },
+        0: { type: "STRIKE", direction: 0 },
+        1: { type: "STRIKE", direction: 180 },
       },
       { 0: 2, 1: 1 },
       1,
@@ -50,7 +50,7 @@ describe("resolveTurn", () => {
       [player(0, { x: -1, z: 0 }, 1), player(1, { x: 1, z: 0 })],
       {
         0: { type: "PASS" },
-        1: { type: "SWEEP", direction: 180 },
+        1: { type: "STRIKE", direction: 180 },
       },
       { 0: 1, 1: 2 },
       1,
@@ -110,7 +110,7 @@ describe("simulateGame", () => {
   it("runs multiple turns to completion", () => {
     const sim = simulateGame(players(), [
       { actions: { 0: { type: "PASS" }, 1: { type: "PASS" } }, validationOrders: { 0: 1, 1: 2 } },
-      { actions: { 0: { type: "SWEEP", direction: 0 }, 1: { type: "PASS" } }, validationOrders: { 0: 1, 1: 2 } },
+      { actions: { 0: { type: "STRIKE", direction: 0 }, 1: { type: "PASS" } }, validationOrders: { 0: 1, 1: 2 } },
     ]);
     expect(sim.turns).toHaveLength(2);
     expect(sim.finished).toBe(false);

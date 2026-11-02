@@ -36,7 +36,6 @@ const a = GAME_CONFIG.attacks;
 
 const ACTIONS: { id: SelectorAction; labelKey: string; desc: string }[] = [
   { id: "MOVE", labelKey: "game.move", desc: `≤${GAME_CONFIG.maxMoveDistance}` },
-  { id: "SWEEP", labelKey: "game.sweep", desc: `${a.SWEEP.range}/${a.SWEEP.angle}°` },
   { id: "STRIKE", labelKey: "game.strike", desc: `${a.STRIKE.range}/${a.STRIKE.angle}°` },
   { id: "SNIPER", labelKey: "game.sniper", desc: `${a.SNIPER.range}/${a.SNIPER.angle}°` },
 ];
