@@ -23,6 +23,7 @@ import {
   RingGeometry,
   Scene,
   Shape,
+  ShapeGeometry,
   SphereGeometry,
   Vector2,
   Vector3,
@@ -115,18 +116,38 @@ const setupScene = (): void => {
 const buildArenaMesh = (): void => {
   if (!scene) return;
   const R = GAME_CONFIG.arenaRadius;
+
+  // Hexagon vertices (flat layout identical to buildArenaBounds).
+  const vertices: [number, number][] = [];
+  for (let i = 0; i < 6; i++) {
+    const angle = degToRad(90 + 60 * i);
+    vertices.push([Math.cos(angle) * R, Math.sin(angle) * R]);
+  }
+
+  // Transparent floor: the background terrain shows through, with a
+  // faint dark veil so the arena interior reads slightly darker.
   const hex = new Shape();
   for (let i = 0; i <= 6; i++) {
-    const angle = degToRad(90 + 60 * i);
-    const x = Math.cos(angle) * R;
-    const y = Math.sin(angle) * R;
+    const [x, y] = vertices[i % 6]!;
     if (i === 0) hex.moveTo(x, y);
     else hex.lineTo(x, y);
   }
-  const geometry = new ExtrudeGeometry(hex, { depth: 0.5, bevelEnabled: false });
-  geometry.rotateX(-Math.PI / 2);
-  const floor = new Mesh(geometry, new MeshStandardMaterial({ color: "#191d26" }));
+  const floor = new Mesh(
+    new ShapeGeometry(hex),
+    new MeshBasicMaterial({ color: "#000000", transparent: true, opacity: 0.18, depthWrite: false }),
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = 0.02;
   scene.add(floor);
+
+  // Top edge of the contour: thin semi-transparent white line.
+  const outlinePoints = vertices.map(([x, y]) => new Vector3(x, 0.02, y));
+  outlinePoints.push(outlinePoints[0]!.clone());
+  const outline = new Line(
+    new BufferGeometry().setFromPoints(outlinePoints),
+    new LineBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.55 }),
+  );
+  scene.add(outline);
 };
 
 const buildCapsules = (): void => {
