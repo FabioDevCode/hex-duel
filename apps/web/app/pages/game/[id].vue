@@ -397,6 +397,15 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 16px;
   z-index: 10;
+
+  background-color: #170E1A;
+  color: whitesmoke;
+
+  border: 3px solid transparent;
+  border-radius: 12px;
+  background:
+    linear-gradient(#111, #111) padding-box,
+    linear-gradient(135deg, #CB5901, #FD9909, #FD9909, #FD9909, #FCF069, #FD9909, #FD9909, #FD9909, #CB5901) border-box;
 }
 
 .result-title {
@@ -407,8 +416,19 @@ onBeforeUnmount(() => {
 .invite-code {
   font-size: 2.5rem;
   font-weight: 800;
-  letter-spacing: 0.3em;
-  color: var(--accent);
+  text-align: center;
+
+  background: linear-gradient(
+    135deg,
+    #CB5901,
+    #FD9909,
+    #FCF069,
+    #FD9909,
+    #CB5901
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 .result-actions {

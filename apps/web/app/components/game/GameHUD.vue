@@ -51,7 +51,7 @@
       </div>
     </div>
     <p v-if="opponentReady" class="opponent-status">{{ t("game.opponentReady") }}</p>
-    <p v-else class="opponent-status text-secondary">{{ t("game.opponentChoosing") }}</p>
+    <p v-else class="opponent-status text-tertiaire">{{ t("game.opponentChoosing") }}</p>
   </div>
 </template>
 
@@ -121,7 +121,7 @@ export type { AttackType };
 
 .turn {
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: var(--text-tertiaire);
   letter-spacing: 0.08em;
   font-weight: 600;
 }

@@ -1,7 +1,8 @@
 <template>
   <div class="room">
     <div class="room-actions">
-      <button class="btn btn-primary" @click="createRoom">{{ t("room.create") }}</button>
+      <button class="btn create-btn golden-button" @click="createRoom">{{ t("room.create") }}</button>
+      <hr class="separator">
       <form class="join-form" @submit.prevent="joinRoom">
         <input
           v-model="joinCode"
@@ -9,7 +10,7 @@
           :placeholder="t('room.code')"
           maxlength="8"
         />
-        <button class="btn" type="submit" :disabled="joinCode.length < 4">
+        <button class="btn create-btn golden-button" type="submit" :disabled="joinCode.length < 4">
           {{ t("room.join") }}
         </button>
       </form>
@@ -81,24 +82,53 @@ const joinRoom = async (): Promise<void> => {
   flex-direction: column;
   align-items: center;
   gap: 24px;
+  width: max-content;
+}
+
+.create-btn {
+  padding: 26px 32px !important;
+}
+
+.separator {
+  border: none;
+  height: 3px;
+  border-radius: 10px;
+  background-color: #170E1A;
+  background: linear-gradient(to right, transparent, black, transparent);
+  width: 100%;
+  margin: 20px auto;
 }
 
 .join-form {
   display: flex;
+  flex-direction: column;
   gap: 12px;
+  width: 100%;
+  min-width: 260px;
 }
 
 .code-input {
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-main);
-  padding: 12px 16px;
+  background-color: rgba(203, 89, 1, 0.15);
+  border: 2px solid #170E1A;
+  border-radius: 8px;
+  color: #170E1A;
+  padding: 12px;
   font-size: 1.1rem;
+  font-weight: 600;
+  width: 100%;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  width: 220px;
   text-align: center;
+}
+
+input::placeholder {
+  color: #CB5901;
+  font-weight: 400;
+  opacity: .85;
+}
+
+input:focus {
+  outline: none;
 }
 
 .error {

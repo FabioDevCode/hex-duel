@@ -1,13 +1,14 @@
 :root {
-  --bg-main: #151515;
+  --bg-main: #170E1A;
   --bg-secondary: #191d26;
   --bg-panel: #222735;
   --border: #343b4b;
   --text-main: #f5f7fa;
-  --text-secondary: #151515;
+  --text-secondary: #f5f7fa;
+  --text-tertiaire: #170E1A;
   --player-red: #ff4d5a;
   --player-blue: #4d91ff;
-  --crystal-lost: #151515;
+  --crystal-lost: #170E1A;
   --accent: #8d7cff;
   --success: #42c98a;
   --warning: #f5b942;
@@ -37,10 +38,8 @@ button {
 }
 
 .panel {
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 16px;
+  padding: 26px;
 }
 
 .btn {
@@ -54,11 +53,6 @@ button {
   letter-spacing: 0.05em;
   transition: border-color 0.15s, background-color 0.15s;
 }
-
-/* .btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  background-color: var(--bg-secondary);
-} */
 
 .btn:disabled {
   opacity: 0.4;
@@ -77,6 +71,10 @@ button {
 
 .text-secondary {
   color: var(--text-secondary);
+}
+
+.text-tertiaire {
+  color: var(--text-tertiaire);
 }
 
 .golden-button {
