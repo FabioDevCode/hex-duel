@@ -32,7 +32,7 @@ import {
 import type { AttackType, Vector2 as GameVector2 } from "@hex-duel/shared";
 import { GAME_CONFIG } from "@hex-duel/shared";
 import { buildArenaBounds, isInsideArena } from "@hex-duel/game-logic";
-import { buildCharacter } from "./characterModels";
+import { loadCharacterModel } from "./characterModels";
 
 const props = defineProps<{
   playerPositions: [GameVector2, GameVector2];
@@ -154,11 +154,17 @@ const buildCapsules = (): void => {
   if (!scene) return;
   const groups: [Group, Group] = [new Group(), new Group()];
   for (const seat of [0, 1] as const) {
-    // Detailed character (red samurai / blue knight), footprint and
-    // height close to the previous capsule (~2.8 units tall).
-    const character = buildCharacter(seat);
-    groups[seat].add(character);
     scene.add(groups[seat]);
+    // GLB character (red samurai / blue knight), loaded asynchronously in
+    // rest pose, normalized to ~2x the previous character height, facing
+    // the opponent. Animations are not wired yet.
+    void loadCharacterModel(seat)
+      .then((model) => {
+        groups[seat].add(model);
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to load the character model", error);
+      });
   }
   capsules = groups;
   updateCapsulePositions();
