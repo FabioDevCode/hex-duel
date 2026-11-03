@@ -4,12 +4,10 @@
 
 <script setup lang="ts">
 import {
-  AmbientLight,
   BufferGeometry,
   Float32BufferAttribute,
   Color,
   ConeGeometry,
-  DirectionalLight,
   ExtrudeGeometry,
   Group,
   Line,
@@ -17,6 +15,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
+  PCFSoftShadowMap,
   PerspectiveCamera,
   Plane,
   Raycaster,
@@ -34,6 +33,8 @@ import { GAME_CONFIG } from "@hex-duel/shared";
 import { buildArenaBounds, isInsideArena } from "@hex-duel/game-logic";
 import { loadCharacterModel } from "./characterModels";
 import { CharacterAnimator } from "./characterAnimator";
+import { createArenaLighting, enableCharacterShadows } from "./arenaLighting";
+import type { ArenaLighting } from "./arenaLighting";
 
 const props = defineProps<{
   playerPositions: [GameVector2, GameVector2];
@@ -60,6 +61,7 @@ let renderer: WebGLRenderer | null = null;
 let scene: Scene | null = null;
 let camera: PerspectiveCamera | null = null;
 let capsules: [Group, Group] | null = null;
+let lighting: ArenaLighting | null = null;
 let animators: [CharacterAnimator, CharacterAnimator] | null = null;
 let lastFrameTime = 0;
 
@@ -107,13 +109,13 @@ const setupScene = (): void => {
   // Transparent canvas: the page background image (terrain) shows through.
   renderer = new WebGLRenderer({ antialias: true, alpha: true });
   renderer.setClearColor(0x000000, 0);
+  // Soft-edged sun shadows over the arena.
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = PCFSoftShadowMap;
   renderer.setSize(container.value.clientWidth, container.value.clientHeight);
   container.value.appendChild(renderer.domElement);
 
-  scene.add(new AmbientLight(0xffffff, 0.5));
-  const sun = new DirectionalLight(0xffffff, 1);
-  sun.position.set(10, 30, 10);
-  scene.add(sun);
+  lighting = createArenaLighting(scene);
 
   buildArenaMesh();
   buildCapsules();
@@ -141,12 +143,21 @@ const buildArenaMesh = (): void => {
     if (i === 0) hex.moveTo(x, y);
     else hex.lineTo(x, y);
   }
+  // MeshStandardMaterial (not MeshBasicMaterial) so the floor RECEIVES the
+  // sun shadows while staying translucent over the background terrain.
   const floor = new Mesh(
     new ShapeGeometry(hex),
-    new MeshBasicMaterial({ color: "#000000", transparent: true, opacity: 0.18, depthWrite: false }),
+    new MeshStandardMaterial({
+      color: "#000000",
+      transparent: true,
+      opacity: 0.18,
+      depthWrite: false,
+      roughness: 1,
+    }),
   );
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = 0.02;
+  floor.receiveShadow = true;
   scene.add(floor);
 
   // Top edge of the contour: thin semi-transparent white line.
@@ -171,6 +182,8 @@ const buildCapsules = (): void => {
     // so the T-pose never shows.
     void loadCharacterModel(seat)
       .then(({ model, animations }) => {
+        // Skinned GLB: every mesh in the hierarchy must cast shadows.
+        enableCharacterShadows(model);
         groups[seat].add(model);
         mixers[seat] = new CharacterAnimator(model, animations, CLIP_NAMES);
         animators = mixers;
@@ -610,6 +623,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  lighting?.dispose();
+  lighting = null;
   cancelAnimationFrame(animationFrame);
   window.removeEventListener("resize", onResize);
   renderer?.dispose();
