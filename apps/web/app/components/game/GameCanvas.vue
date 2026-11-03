@@ -14,13 +14,13 @@ import {
   LineBasicMaterial,
   Mesh,
   MeshBasicMaterial,
-  MeshStandardMaterial,
   PCFSoftShadowMap,
   PerspectiveCamera,
   Plane,
   Raycaster,
   RingGeometry,
   Scene,
+  ShadowMaterial,
   Shape,
   ShapeGeometry,
   SphereGeometry,
@@ -143,17 +143,11 @@ const buildArenaMesh = (): void => {
     if (i === 0) hex.moveTo(x, y);
     else hex.lineTo(x, y);
   }
-  // MeshStandardMaterial (not MeshBasicMaterial) so the floor RECEIVES the
-  // sun shadows while staying translucent over the background terrain.
+  // ShadowMaterial: invisible everywhere except where shadows land -
+  // no dark veil over the terrain, only the characters' cast shadows.
   const floor = new Mesh(
     new ShapeGeometry(hex),
-    new MeshStandardMaterial({
-      color: "#000000",
-      transparent: true,
-      opacity: 0.18,
-      depthWrite: false,
-      roughness: 1,
-    }),
+    new ShadowMaterial({ opacity: 0.35 }),
   );
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = 0.02;
