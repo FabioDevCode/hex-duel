@@ -16,6 +16,7 @@ import {
   MeshBasicMaterial,
   PCFSoftShadowMap,
   PerspectiveCamera,
+  PlaneGeometry,
   Plane,
   Raycaster,
   RingGeometry,
@@ -153,6 +154,18 @@ const buildArenaMesh = (): void => {
   floor.position.y = 0.02;
   floor.receiveShadow = true;
   scene.add(floor);
+
+  // Safety net for shadows: a large invisible plane under the arena
+  // (same ShadowMaterial) so characters that slightly leave the hexagon
+  // keep their shadow on the terrain. Renders nothing but shadows.
+  const shadowCatch = new Mesh(
+    new PlaneGeometry(GAME_CONFIG.arenaRadius * 6, GAME_CONFIG.arenaRadius * 6),
+    new ShadowMaterial({ opacity: 0.35 }),
+  );
+  shadowCatch.rotation.x = -Math.PI / 2;
+  shadowCatch.position.y = 0.01;
+  shadowCatch.receiveShadow = true;
+  scene.add(shadowCatch);
 
   // Top edge of the contour: thin semi-transparent white line.
   const outlinePoints = vertices.map(([x, y]) => new Vector3(x, 0.02, y));

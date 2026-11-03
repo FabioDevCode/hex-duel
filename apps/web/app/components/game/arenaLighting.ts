@@ -37,15 +37,19 @@ export const createArenaLighting = (scene: Scene): ArenaLighting => {
   sun.target.position.set(0, 0, 0);
   sun.castShadow = true;
 
-  // Shadow camera fitted exactly to the arena, no wasted margin.
+  // Shadow camera covering the extended safety plane (~3x the arena
+  // radius) so shadows survive slightly outside the arena contour.
+  const shadowCoverage = arenaRadius * 3;
   const shadowCamera = sun.shadow.camera;
-  shadowCamera.left = -arenaRadius;
-  shadowCamera.right = arenaRadius;
-  shadowCamera.top = arenaRadius;
-  shadowCamera.bottom = -arenaRadius;
+  shadowCamera.left = -shadowCoverage;
+  shadowCamera.right = shadowCoverage;
+  shadowCamera.top = shadowCoverage;
+  shadowCamera.bottom = -shadowCoverage;
   shadowCamera.near = 1;
   shadowCamera.far = SUN_HEIGHT * 2.5;
-  sun.shadow.mapSize.set(2048, 2048);
+  // 4096 map: the coverage is ~9x larger than the arena, the bigger map
+  // compensates the sharpness loss.
+  sun.shadow.mapSize.set(4096, 4096);
   // Slightly negative bias avoids shadow acne on the ground.
   sun.shadow.bias = -0.0005;
 
