@@ -20,18 +20,11 @@ import * as path from "node:path";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as THREE from "three";
 
-type ManifestTrack = {
-  type: string;
-  target: string;
-  property: string;
-};
-
 type ManifestClip = {
   name: string;
   duration: number;
   frameRate: number | null;
-  tracks: ManifestTrack[];
-  targetNodes: string[];
+  nbTracks: number;
 };
 
 type ManifestMaterial = {
@@ -39,14 +32,6 @@ type ManifestMaterial = {
   type: string;
   vertexColors: boolean;
   skinning: boolean;
-};
-
-type ManifestNode = {
-  name: string;
-  type: string;
-  children: ManifestNode[];
-  mesh?: string;
-  bone?: boolean;
 };
 
 type Manifest = {
@@ -60,21 +45,6 @@ type Manifest = {
   animations: ManifestClip[];
   boundingBox: { min: [number, number, number]; max: [number, number, number] };
   size: [number, number, number];
-  rootNodes: ManifestNode[];
-};
-
-const buildNodeManifest = (object: THREE.Object3D): ManifestNode => {
-  const isMesh = (object as THREE.Mesh).isMesh === true;
-  const isBone = (object as THREE.Bone).isBone === true;
-  const mesh = object as THREE.Mesh;
-  const geometry = isMesh ? mesh.geometry : null;
-  return {
-    name: object.name || "(unnamed)",
-    type: isBone ? "Bone" : isMesh ? "Mesh" : object.type,
-    children: object.children.map(buildNodeManifest),
-    ...(isMesh && geometry ? { mesh: geometry.name || "(unnamed geometry)" } : {}),
-    ...(isBone ? { bone: true } : {}),
-  };
 };
 
 const analyze = async (file: string, outFile?: string): Promise<void> => {
@@ -128,12 +98,6 @@ const analyze = async (file: string, outFile?: string): Promise<void> => {
   });
 
   const animations: ManifestClip[] = gltf.animations.map((clip) => {
-    const tracks: ManifestTrack[] = clip.tracks.map((track) => {
-      const target = track.name.slice(0, track.name.lastIndexOf("."));
-      const property = track.name.slice(track.name.lastIndexOf(".") + 1);
-      return { type: track.constructor.name, target, property };
-    });
-    const targetNodes = [...new Set(tracks.map((t) => t.target))];
     const times = (clip.tracks[0] as THREE.KeyframeTrack | undefined)?.times;
     let frameRate: number | null = null;
     if (times && times.length > 1 && clip.duration > 0) {
@@ -144,8 +108,7 @@ const analyze = async (file: string, outFile?: string): Promise<void> => {
       name: clip.name || "(unnamed clip)",
       duration: Number(clip.duration.toFixed(3)),
       frameRate,
-      tracks: tracks.map((t) => ({ ...t, target: t.target.split(".").pop() ?? t.target })),
-      targetNodes,
+      nbTracks: clip.tracks.length,
     };
   });
 
@@ -166,7 +129,6 @@ const analyze = async (file: string, outFile?: string): Promise<void> => {
       max: [box.max.x, box.max.y, box.max.z].map((v) => Number(v.toFixed(3))) as [number, number, number],
     },
     size: [size.x, size.y, size.z].map((v) => Number(v.toFixed(3))) as [number, number, number],
-    rootNodes: scene.children.map(buildNodeManifest),
   };
 
   const json = JSON.stringify(manifest, null, 2);
