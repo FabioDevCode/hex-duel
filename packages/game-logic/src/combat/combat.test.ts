@@ -34,7 +34,7 @@ describe("checkAttack", () => {
     const params = GAME_CONFIG.attacks.STRIKE;
     const check = checkAttack(
       { x: 0, z: 0 },
-      { x: 6, z: 0 },
+      { x: 7, z: 0 },
       { type: "STRIKE", direction: 0 },
       params,
     );

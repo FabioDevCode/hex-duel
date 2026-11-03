@@ -7,7 +7,7 @@ export const GAME_CONFIG = {
   collisionRadius: 0,
   attacks: {
     STRIKE: {
-      range: 5,
+      range: 6,
       angle: 90,
     },
     SNIPER: {
