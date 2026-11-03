@@ -23,7 +23,6 @@ import {
   Scene,
   ShadowMaterial,
   Shape,
-  ShapeGeometry,
   SphereGeometry,
   Vector2,
   Vector3,
@@ -136,28 +135,11 @@ const buildArenaMesh = (): void => {
     vertices.push([Math.cos(angle) * R, Math.sin(angle) * R]);
   }
 
-  // Transparent floor: the background terrain shows through, with a
-  // faint dark veil so the arena interior reads slightly darker.
-  const hex = new Shape();
-  for (let i = 0; i <= 6; i++) {
-    const [x, y] = vertices[i % 6]!;
-    if (i === 0) hex.moveTo(x, y);
-    else hex.lineTo(x, y);
-  }
-  // ShadowMaterial: invisible everywhere except where shadows land -
-  // no dark veil over the terrain, only the characters' cast shadows.
-  const floor = new Mesh(
-    new ShapeGeometry(hex),
-    new ShadowMaterial({ opacity: 0.35 }),
-  );
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = 0.02;
-  floor.receiveShadow = true;
-  scene.add(floor);
-
-  // Safety net for shadows: a large invisible plane under the arena
-  // (same ShadowMaterial) so characters that slightly leave the hexagon
-  // keep their shadow on the terrain. Renders nothing but shadows.
+  // Single uniform shadow receiver: one large invisible ShadowMaterial
+  // plane covering the arena and its surroundings - no hexagonal floor
+  // on top (double shadow superposition), so the shadow keeps the same
+  // intensity inside and outside the arena contour. Renders nothing
+  // but shadows.
   const shadowCatch = new Mesh(
     new PlaneGeometry(GAME_CONFIG.arenaRadius * 6, GAME_CONFIG.arenaRadius * 6),
     new ShadowMaterial({ opacity: 0.35 }),
