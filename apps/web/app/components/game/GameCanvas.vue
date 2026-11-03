@@ -33,6 +33,7 @@ import type { AttackType, Vector2 as GameVector2 } from "@hex-duel/shared";
 import { GAME_CONFIG } from "@hex-duel/shared";
 import { buildArenaBounds, isInsideArena } from "@hex-duel/game-logic";
 import { loadCharacterModel } from "./characterModels";
+import { CharacterAnimator } from "./characterAnimator";
 
 const props = defineProps<{
   playerPositions: [GameVector2, GameVector2];
@@ -59,6 +60,14 @@ let renderer: WebGLRenderer | null = null;
 let scene: Scene | null = null;
 let camera: PerspectiveCamera | null = null;
 let capsules: [Group, Group] | null = null;
+let animators: [CharacterAnimator, CharacterAnimator] | null = null;
+let lastFrameTime = 0;
+
+// Clip names shared by both models (see the manifests beside the .glb files).
+const CLIP_NAMES = {
+  idle: "Axe_Breathe_and_Look_Around",
+  walk: "Walking",
+} as const;
 let raycaster = new Raycaster();
 let groundPlane = new Plane(new Vector3(0, 1, 0), 0);
 let mouseNDC = new Vector2();
@@ -153,14 +162,18 @@ const buildArenaMesh = (): void => {
 const buildCapsules = (): void => {
   if (!scene) return;
   const groups: [Group, Group] = [new Group(), new Group()];
+  const mixers: [CharacterAnimator, CharacterAnimator] = [] as never;
   for (const seat of [0, 1] as const) {
     scene.add(groups[seat]);
-    // GLB character (red samurai / blue knight), loaded asynchronously in
-    // rest pose, normalized to ~2x the previous character height, facing
-    // the opponent. Animations are not wired yet.
+    // GLB character (red samurai / blue knight), loaded asynchronously,
+    // normalized to ~2x the previous character height, facing the opponent.
+    // The animator starts the idle loop as soon as the model is loaded,
+    // so the T-pose never shows.
     void loadCharacterModel(seat)
-      .then((model) => {
+      .then(({ model, animations }) => {
         groups[seat].add(model);
+        mixers[seat] = new CharacterAnimator(model, animations, CLIP_NAMES);
+        animators = mixers;
       })
       .catch((error: unknown) => {
         console.error("Failed to load the character model", error);
@@ -390,6 +403,13 @@ let animationFrame = 0;
 
 const render = (): void => {
   if (!renderer || !scene || !camera) return;
+  const now = performance.now();
+  if (lastFrameTime > 0) {
+    const deltaS = Math.min(0.1, (now - lastFrameTime) / 1000);
+    animators?.[0]?.update(deltaS);
+    animators?.[1]?.update(deltaS);
+  }
+  lastFrameTime = now;
   stepResolution();
   renderer.render(scene, camera);
   animationFrame = requestAnimationFrame(render);
@@ -430,7 +450,18 @@ type ResolutionStep =
   | { kind: "attack"; seat: 0 | 1; type: AttackType; direction: number };
 
 type ActiveStep =
-  | { kind: "move"; seat: 0 | 1; from: GameVector2; to: GameVector2; startedAt: number }
+  | {
+      kind: "move";
+      seat: 0 | 1;
+      from: GameVector2;
+      to: GameVector2;
+      turnFromYaw: number;
+      turnToYaw: number;
+      turnDurationMs: number;
+      walkDurationMs: number;
+      walkStarted: boolean;
+      startedAt: number;
+    }
   | { kind: "attack"; seat: 0 | 1; cone: Mesh; startedAt: number };
 
 const MOVE_DURATION_MS = 1500;
@@ -441,6 +472,10 @@ const activeStep = ref<ActiveStep | null>(null);
 
 const playResolution = (): void => {
   if (!scene || !capsules) return;
+  // Any leftover walking state from a previous resolution is cleanly
+  // crossfaded back to idle before the new sequence starts.
+  animators?.[0]?.playIdle();
+  animators?.[1]?.playIdle();
   queuedSteps.value = [...(props.resolution?.steps ?? [])];
   if (queuedSteps.value.length === 0) {
     isAnimatingResolution.value = false;
@@ -449,6 +484,17 @@ const playResolution = (): void => {
   isAnimatingResolution.value = true;
   hideAllIndicators();
   startNextStep();
+};
+
+// The GLB models face their opponent at load (rotation.y = +/- PI/2);
+// rotating the group turns the character in the world.
+const modelYawOffset = (seat: 0 | 1): number => (seat === 0 ? Math.PI / 2 : -Math.PI / 2);
+
+const shortestAngle = (from: number, to: number): number => {
+  let delta = (to - from) % (Math.PI * 2);
+  if (delta > Math.PI) delta -= Math.PI * 2;
+  if (delta < -Math.PI) delta += Math.PI * 2;
+  return delta;
 };
 
 const startNextStep = (): void => {
@@ -460,7 +506,22 @@ const startNextStep = (): void => {
     return;
   }
   if (next.kind === "move") {
-    activeStep.value = { ...next, startedAt: performance.now() };
+    const group = capsules?.[next.seat];
+    const dx = next.to.x - next.from.x;
+    const dz = next.to.z - next.from.z;
+    const targetYaw = Math.atan2(dx, dz) - modelYawOffset(next.seat);
+    const currentYaw = group ? group.rotation.y : targetYaw;
+    const turnAngle = Math.abs(shortestAngle(currentYaw, targetYaw));
+    const turnDurationMs = Math.min(800, Math.max(150, (turnAngle / Math.PI) * 800));
+    activeStep.value = {
+      ...next,
+      turnFromYaw: currentYaw,
+      turnToYaw: currentYaw + shortestAngle(currentYaw, targetYaw),
+      turnDurationMs,
+      walkDurationMs: MOVE_DURATION_MS,
+      walkStarted: false,
+      startedAt: performance.now(),
+    };
   } else {
     if (!scene) return;
     const params = attackParams(next.type);
@@ -494,12 +555,32 @@ const stepResolution = (): void => {
   const now = performance.now();
 
   if (step.kind === "move") {
-    const t = Math.min(1, (now - step.startedAt) / MOVE_DURATION_MS);
-    const eased = t * t * (3 - 2 * t);
     const group = capsules[step.seat];
+    const elapsed = now - step.startedAt;
+    // Phase 1: pivot in place to face the destination (idle keeps playing).
+    if (elapsed < step.turnDurationMs) {
+      const t = Math.min(1, elapsed / step.turnDurationMs);
+      const eased = t * t * (3 - 2 * t);
+      group.rotation.y = step.turnFromYaw + (step.turnToYaw - step.turnFromYaw) * eased;
+      group.position.x = step.from.x;
+      group.position.z = step.from.z;
+      return;
+    }
+    // Phase 2: walk to the destination (Walking loops, crossfaded once).
+    if (!step.walkStarted) {
+      step.walkStarted = true;
+      animators?.[step.seat]?.playWalking();
+    }
+    const walkElapsed = elapsed - step.turnDurationMs;
+    const t = Math.min(1, walkElapsed / step.walkDurationMs);
+    const eased = t * t * (3 - 2 * t);
+    group.rotation.y = step.turnToYaw;
     group.position.x = step.from.x + (step.to.x - step.from.x) * eased;
     group.position.z = step.from.z + (step.to.z - step.from.z) * eased;
-    if (t >= 1) startNextStep();
+    if (t >= 1) {
+      animators?.[step.seat]?.playIdle();
+      startNextStep();
+    }
     return;
   }
 

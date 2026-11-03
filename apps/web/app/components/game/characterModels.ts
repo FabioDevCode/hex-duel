@@ -1,4 +1,4 @@
-import type { Group } from "three";
+import type { AnimationClip, Group } from "three";
 import { Box3, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
@@ -23,12 +23,18 @@ const getLoader = (): GLTFLoader => {
   return loader;
 };
 
+export type LoadedCharacter = {
+  model: Group;
+  animations: AnimationClip[];
+};
+
 /**
  * Loads the character for a seat (0 = samurai, 1 = knight) in rest pose,
- * scaled to the target height with feet on the ground (y = 0).
+ * scaled to the target height with feet on the ground (y = 0), along with
+ * its animation clips (see the manifests for the available names).
  */
-export const loadCharacterModel = (seat: 0 | 1): Promise<Group> =>
-  new Promise<Group>((resolve, reject) => {
+export const loadCharacterModel = (seat: 0 | 1): Promise<LoadedCharacter> =>
+  new Promise<LoadedCharacter>((resolve, reject) => {
     getLoader().load(
       MODEL_URLS[seat],
       (gltf) => {
@@ -43,7 +49,7 @@ export const loadCharacterModel = (seat: 0 | 1): Promise<Group> =>
         // Face the opponent: seat 0 starts at x = -6 (looks toward +X),
         // seat 1 at x = +6 (looks toward -X).
         model.rotation.y = seat === 0 ? Math.PI / 2 : -Math.PI / 2;
-        resolve(model);
+        resolve({ model, animations: gltf.animations });
       },
       undefined,
       (error) => reject(error instanceof Error ? error : new Error(String(error))),
