@@ -9,7 +9,7 @@
   --player-red: #ff4d5a;
   --player-blue: #4d91ff;
   --crystal-lost: #170E1A;
-  --accent: #8d7cff;
+  --accent: #ffe37c;
   --success: #42c98a;
   --warning: #f5b942;
   --error: #f05a62;
@@ -44,7 +44,7 @@ button {
 
 .btn {
   background-color: var(--bg-panel);
-  border: 1px solid var(--border);
+  border: 1px solid var(--bg-panel);
   border-radius: 6px;
   color: var(--text-main);
   padding: 12px 24px;
@@ -60,13 +60,17 @@ button {
 }
 
 .btn-primary {
-  background-color: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: #7a68f0;
+  border: 1px solid #170E1A;
+  background-image: linear-gradient(
+      160deg,
+      #CB5901,
+      #FD9909,
+      #FCF069,
+      #FD9909,
+      #CB5901
+  );
+  color: #ac4a00;
+  text-shadow: 0 1px 1px #FCF069;
 }
 
 .text-secondary {
@@ -108,11 +112,10 @@ button {
       #FD9909,
       #CB5901
   );
-  /* border: 1px solid #CB5901; */
   border: 2px solid #170E1A;
   color: #ac4a00;
-  font-weight: 600;
   text-shadow: 0 1px 1px #FCF069;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   background-size: 100% 100%;

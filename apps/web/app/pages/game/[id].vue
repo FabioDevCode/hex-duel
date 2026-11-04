@@ -416,7 +416,6 @@ onBeforeUnmount(() => {
 .result-modal {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   align-items: center;
   text-align: center;
   min-width: 320px;
@@ -473,6 +472,7 @@ onBeforeUnmount(() => {
 .result-actions {
   display: flex;
   gap: 12px;
+  margin-top: 16px;
   justify-content: center;
 }
 </style>

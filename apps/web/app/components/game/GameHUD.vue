@@ -171,8 +171,8 @@ export type { AttackType };
 }
 
 .img-btn img {
-  width: 74px;
-  height: 74px;
+  width: 68px;
+  height: 68px;
   object-fit: contain;
   display: block;
   pointer-events: none;
