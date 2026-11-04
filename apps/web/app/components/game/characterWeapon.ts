@@ -86,15 +86,16 @@ export const attachWeaponAndGrip = (model: Object3D, weapon: Object3D): (() => v
   const handleDir = thumb1 && pinky1
     ? thumb1.getWorldPosition(new Vector3()).sub(pinky1.getWorldPosition(new Vector3())).normalize()
     : new Vector3(0, 0, 1);
-  // The blade must be PERPENDICULAR to the forearm, not in its extension:
-  // it points along the palm normal (knuckle side), so the sword stands
-  // across the fist like a natural grip instead of a claw.
-  const bladeDir = new Vector3().crossVectors(fingerDir, handleDir).normalize();
+  // The blade must point FORWARD, toward where the character looks
+  // (rig-local +Z), perpendicular to the forearm - not through the back
+  // of the hand and not along the arm. Forward = palmNormal x fingerDir.
+  const palmNormal = new Vector3().crossVectors(fingerDir, handleDir).normalize();
+  const bladeDir = new Vector3().crossVectors(palmNormal, fingerDir).normalize();
 
   // Weapon geometry: blade along its local Y (see the manifests' bounding
-  // boxes). Align local +Y with the blade direction (palm normal), local
-  // +X with the handle axis (across the fist), both in the hand bone's
-  // local space.
+  // boxes). Align local +Y with the blade direction (character forward),
+  // local +X with the handle axis (across the fist), both in the hand
+  // bone's local space.
   const localBlade = bladeDir.clone().applyQuaternion(invHandQuat).normalize();
   const localHandle = handleDir.clone().applyQuaternion(invHandQuat).normalize();
   const localX = localHandle.clone().sub(localBlade.clone().multiplyScalar(localHandle.dot(localBlade))).normalize();
