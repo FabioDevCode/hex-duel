@@ -66,6 +66,13 @@ let animators: [CharacterAnimator, CharacterAnimator] | null = null;
 let lastFrameTime = 0;
 
 // Clip names per model (see the manifests beside the .glb files).
+
+// Indicator colors: move = blue, attacks = per type (STRIKE red, SNIPER gold).
+const MOVE_COLOR = 0x4d91ff;
+const ATTACK_COLORS: Record<AttackType, number> = {
+  STRIKE: 0xff4d5a,
+  SNIPER: 0xffd24d,
+};
 let raycaster = new Raycaster();
 let groundPlane = new Plane(new Vector3(0, 1, 0), 0);
 let mouseNDC = new Vector2();
@@ -193,14 +200,14 @@ const buildIndicators = (): void => {
 
   moveIndicator = new Mesh(
     new SphereGeometry(0.25, 12, 12),
-    new MeshBasicMaterial({ color: 0x42c98a }),
+    new MeshBasicMaterial({ color: MOVE_COLOR }),
   );
   moveIndicator.visible = false;
   scene.add(moveIndicator);
 
   trajectoryLine = new Line(
     makeLineGeometry(new Float32Array([])),
-    new LineBasicMaterial({ color: 0x42c98a }),
+    new LineBasicMaterial({ color: MOVE_COLOR }),
   );
   trajectoryLine.visible = false;
   scene.add(trajectoryLine);
@@ -222,7 +229,7 @@ const buildIndicators = (): void => {
 
   moveRangeCircle = new Mesh(
     new RingGeometry(0.98, 1, 48),
-    new MeshBasicMaterial({ color: 0x42c98a, transparent: true, opacity: 0.3, side: 2 }),
+    new MeshBasicMaterial({ color: MOVE_COLOR, transparent: true, opacity: 0.3, side: 2 }),
   );
   moveRangeCircle.rotation.x = -Math.PI / 2;
   moveRangeCircle.visible = false;
@@ -355,7 +362,12 @@ const updateIndicators = (): void => {
   }
 
   if (action && action.type !== "MOVE" && action.type !== "PASS") {
-    const params = attackParams(action.type as AttackType);
+    const attackType = action.type as AttackType;
+    const params = attackParams(attackType);
+    const attackColor = ATTACK_COLORS[attackType];
+    (aimIndicator.material as MeshBasicMaterial).color.setHex(attackColor);
+    (rangeCircle.material as MeshBasicMaterial).color.setHex(attackColor);
+    (attackCone.material as MeshBasicMaterial).color.setHex(attackColor);
     const directionDeg = props.aimLocked
       ? (action.direction ?? 0)
       : (() => {

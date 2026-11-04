@@ -16,25 +16,29 @@
         :crystals="players?.[1]?.crystals ?? 0"
       />
     </div>
-    <div class="hud-bottom panel">
+    <div class="hud-bottom panel" :class="(mySeat ?? 0) === 0 ? 'side-left' : 'side-right'">
       <ActionSelector
         :selected="selectedAction"
         :disabled="locked"
+        :my-seat="mySeat"
         @select="(a) => $emit('selectAction', a)"
       />
-      <button class="btn btn-primary" :disabled="locked || !selectedAction" @click="$emit('confirm')">
-        {{ locked ? t("game.actionLocked") : t("game.confirm") }}
+      <button
+        class="img-btn"
+        :disabled="locked || !selectedAction"
+        :title="locked ? t('game.actionLocked') : t('game.confirm')"
+        :aria-label="t('game.confirm')"
+        @click="$emit('confirm')"
+      >
+        <img src="/img/a-validate.png" :alt="t('game.confirm')" draggable="false" />
       </button>
       <button
-        class="surrender-btn"
+        class="img-btn"
         :title="t('surrender.title')"
         :aria-label="t('surrender.title')"
         @click="surrenderOpen = true"
       >
-        <svg viewBox="0 0 24 24" class="flag-icon" aria-hidden="true">
-          <path d="M6 2v20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          <path d="M6 3h11l-2.5 3.5L17 10H6z" fill="currentColor" />
-        </svg>
+        <img src="/img/a-giveup.png" :alt="t('surrender.title')" draggable="false" />
       </button>
     </div>
 
@@ -129,12 +133,48 @@ export type { AttackType };
 .hud-bottom {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 12px;
   align-self: center;
   background-color: transparent;
   padding: 0px;
   border: 0px solid transparent;
+}
+
+/* My buttons sit on my side of the arena: red (seat 0) on the
+   left, blue (seat 1) on the right. */
+.hud-bottom.side-left {
+  justify-content: flex-start;
+}
+
+.hud-bottom.side-right {
+  justify-content: flex-end;
+}
+
+/* Image-only buttons: no HTML chrome around the assets. */
+.img-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.img-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.img-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.img-btn img {
+  width: 74px;
+  height: 74px;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
 }
 
 .surrender-btn {

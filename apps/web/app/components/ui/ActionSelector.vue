@@ -1,73 +1,72 @@
 <template>
-  <div class="action-selector">
-    <div class="actions">
-      <button
-        v-for="action in ACTIONS"
-        :key="action.id"
-        class="action-btn"
-        :class="{ selected: selected === action.id }"
-        :disabled="disabled"
-        @click="$emit('select', action.id)"
-      >
-        <span class="action-name">{{ t(action.labelKey) }}</span>
-        <span class="action-desc text-secondary">{{ action.desc }}</span>
-      </button>
-    </div>
+  <div class="action-selector" :class="alignClass">
+    <button
+      v-for="action in ACTIONS"
+      :key="action.id"
+      class="action-btn"
+      :class="{ selected: selected === action.id }"
+      :disabled="disabled"
+      :title="t(action.labelKey)"
+      :aria-label="t(action.labelKey)"
+      @click="$emit('select', action.id)"
+    >
+      <img class="action-img" :src="action.img" :alt="t(action.labelKey)" draggable="false" />
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { useI18n } from "~/composables/useI18n";
-import { GAME_CONFIG } from "@hex-duel/shared";
-import type { AttackType, PlayerAction } from "@hex-duel/shared";
+import type { AttackType } from "@hex-duel/shared";
 
 export type SelectorAction = "MOVE" | AttackType;
 
 const { t } = useI18n();
 
-defineProps<{
+const props = defineProps<{
   selected: SelectorAction | null;
   disabled: boolean;
+  /** My seat: 0 (red, left side) aligns the buttons left, 1 (blue) right. */
+  mySeat?: 0 | 1 | null;
 }>();
 
 defineEmits<{ select: [action: SelectorAction] }>();
 
-const a = GAME_CONFIG.attacks;
+const alignClass = computed(() => ((props.mySeat ?? 0) === 0 ? "align-left" : "align-right"));
 
-const ACTIONS: { id: SelectorAction; labelKey: string; desc: string }[] = [
-  { id: "MOVE", labelKey: "game.move", desc: `≤${GAME_CONFIG.maxMoveDistance}` },
-  { id: "STRIKE", labelKey: "game.strike", desc: `${a.STRIKE.range}/${a.STRIKE.angle}°` },
-  { id: "SNIPER", labelKey: "game.sniper", desc: `${a.SNIPER.range}/${a.SNIPER.angle}°` },
+// One image asset per action (see public/img/a-*.png).
+const ACTIONS: { id: SelectorAction; labelKey: string; img: string }[] = [
+  { id: "MOVE", labelKey: "game.move", img: "/img/a-move.png" },
+  { id: "STRIKE", labelKey: "game.strike", img: "/img/a-strike.png" },
+  { id: "SNIPER", labelKey: "game.sniper", img: "/img/a-sniper.png" },
 ];
 
-export type { PlayerAction };
+export type { PlayerAction } from "@hex-duel/shared";
 </script>
 
 <style scoped>
-.actions {
+.action-selector {
   display: flex;
   gap: 10px;
 }
 
+.action-selector.align-left {
+  justify-content: flex-start;
+}
+
+.action-selector.align-right {
+  justify-content: flex-end;
+}
+
+/* Image-only buttons: no HTML chrome around the assets. */
 .action-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-main);
-  padding: 12px 16px;
-  min-width: 120px;
-}
-
-.action-btn:hover:not(:disabled) {
-  border-color: var(--accent);
-}
-
-.action-btn.selected {
-  border-color: var(--accent);
-  background-color: #2b3050;
+  transition: transform 0.15s ease, filter 0.15s ease;
 }
 
 .action-btn:disabled {
@@ -75,12 +74,20 @@ export type { PlayerAction };
   cursor: not-allowed;
 }
 
-.action-name {
-  font-weight: 700;
-  letter-spacing: 0.06em;
+.action-btn:hover:not(:disabled) {
+  transform: scale(1.05);
 }
 
-.action-desc {
-  font-size: 0.8rem;
+.action-btn.selected {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.65));
+}
+
+.action-img {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
 }
 </style>
