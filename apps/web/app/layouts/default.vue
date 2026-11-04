@@ -59,7 +59,7 @@ const { t, locale, setLocale } = useI18n();
 
 .logo img {
   height: 40px;
-  filter: drop-shadow(2px 6px 8px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(2px 3px 6px rgba(0, 0, 0, 0.7));
 }
 
 .layout-nav {

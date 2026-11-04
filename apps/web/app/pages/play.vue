@@ -58,10 +58,12 @@ const { t } = useI18n();
   gap: 4px;
   outline: none;
   font-family: "Noto Sans", Verdana, sans-serif;
-  max-width: 320px;
+  max-width: 500px;
+  min-width: 300px;
   font-size: 1em;
-  border-radius: 16px;
-  corner-shape: scoop;
+  border-radius: 20px;
+  /* corner-shape: scoop; */
+  corner-shape: bevel;
   height: max-content;
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(110, 80, 20, 0.4),
       inset 0 -2px 5px 1px rgba(203, 89, 1, 1),
@@ -75,7 +77,7 @@ const { t } = useI18n();
       #FD9909,
       #CB5901
   );
-  border: 4px solid #170E1A;
+  border: 2px solid #170E1A;
   color: #ac4a00;
   font-weight: 600;
   text-shadow: 0 1px 1px #FCF069;

@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <img src="/img/hex-duel-logo-sm.png" alt="HEX DUEL">
+    <img src="/img/hex-duel-logo.png" alt="HEX DUEL">
     <!-- <p class="tagline">{{ t("home.tagline") }}</p> -->
     <NuxtLink to="/play" class="btn play-btn golden-button">
       {{ t("home.play") }}
@@ -25,9 +25,9 @@ definePageMeta({ layout: "main" });
 }
 
 img {
-  max-width: 600px;
+  max-width: 500px;
   width: 100%;
-  filter: drop-shadow(5px 8px 10px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(2px 6px 16px rgba(0, 0, 0, 0.9));
 }
 
 .title {
@@ -47,6 +47,8 @@ img {
   font-size: 1.2rem;
   padding: 16px 64px;
   margin-top: 16px;
+  border-radius: 12px;
   text-decoration: none;
+  corner-shape: bevel;
 }
 </style>
