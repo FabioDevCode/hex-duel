@@ -18,11 +18,11 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 const WEAPON_URLS = ["/models/sabre.glb", "/models/epee.glb"] as const;
 
-// Distance from the hand bone toward the palm where the handle sits.
-// The raw weapon models are centered mid-blade (symmetric bounding box),
-// so the grip lands in the fist around this offset - tune if the sword
-// sits too high or too low in the hand.
-const PALM_OFFSET = 0.06;
+// Distance from the hand bone (wrist) toward the palm center where the
+// handle sits (measured ~0.10 on the Mixamo rigs). The raw weapon models
+// are centered mid-blade (symmetric bounding box) - tune if the sword
+// sits too high or too low in the fist.
+const PALM_OFFSET = 0.1;
 
 // Finger curl around the local Z axis, per joint 1..4 (radians).
 // Signs calibrated on the Mixamo rigs: Thumb/Index/Middle curl on +Z,
@@ -78,26 +78,33 @@ export const attachWeaponAndGrip = (model: Object3D, weapon: Object3D): (() => v
   const middle1 = findBone(model, "mixamorigRightHandMiddle1");
   const thumb1 = findBone(model, "mixamorigRightHandThumb1");
   const pinky1 = findBone(model, "mixamorigRightHandPinky1");
-  const bladeDir = middle1
+  // Finger direction (along the forearm in the bind pose) and handle
+  // axis (across the palm, Pinky -> Thumb).
+  const fingerDir = middle1
     ? middle1.getWorldPosition(new Vector3()).sub(handPos).normalize()
-    : new Vector3(0, 1, 0);
+    : new Vector3(1, 0, 0);
   const handleDir = thumb1 && pinky1
     ? thumb1.getWorldPosition(new Vector3()).sub(pinky1.getWorldPosition(new Vector3())).normalize()
-    : new Vector3(1, 0, 0);
+    : new Vector3(0, 0, 1);
+  // The blade must be PERPENDICULAR to the forearm, not in its extension:
+  // it points along the palm normal (knuckle side), so the sword stands
+  // across the fist like a natural grip instead of a claw.
+  const bladeDir = new Vector3().crossVectors(fingerDir, handleDir).normalize();
 
   // Weapon geometry: blade along its local Y (see the manifests' bounding
-  // boxes). Align local +Y with the blade direction, local +X with the
-  // handle axis, both expressed in the hand bone's local space.
+  // boxes). Align local +Y with the blade direction (palm normal), local
+  // +X with the handle axis (across the fist), both in the hand bone's
+  // local space.
   const localBlade = bladeDir.clone().applyQuaternion(invHandQuat).normalize();
   const localHandle = handleDir.clone().applyQuaternion(invHandQuat).normalize();
   const localX = localHandle.clone().sub(localBlade.clone().multiplyScalar(localHandle.dot(localBlade))).normalize();
   const localZ = new Vector3().crossVectors(localX, localBlade);
   const basis = new Matrix4().makeBasis(localX, localBlade, localZ);
   weapon.quaternion.setFromRotationMatrix(basis);
-  // Sit the handle in the palm: offset along the blade axis (the raw
-  // weapon model is centered mid-blade, so shift by GRIP_OFFSET to bring
-  // the handle region to the fist, plus a small palm offset).
-  weapon.position.copy(localBlade).multiplyScalar(PALM_OFFSET);
+  // Sit the handle in the palm center: offset from the wrist toward the
+  // fingers, along the finger direction.
+  const localFinger = fingerDir.clone().applyQuaternion(invHandQuat).normalize();
+  weapon.position.copy(localFinger).multiplyScalar(PALM_OFFSET);
   hand.add(weapon);
 
   // --- Closed grip: curl quaternions applied to the finger joints. ---
