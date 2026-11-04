@@ -1,4 +1,4 @@
-import type { Bone, Group, Object3D } from "three";
+import type { Bone, BufferGeometry, Group, Mesh, Object3D } from "three";
 import { Box3, Matrix4, Quaternion, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
@@ -102,10 +102,15 @@ export const attachWeaponAndGrip = (model: Object3D, weapon: Object3D): (() => v
   const localZ = new Vector3().crossVectors(localX, localBlade);
   const basis = new Matrix4().makeBasis(localX, localBlade, localZ);
   weapon.quaternion.setFromRotationMatrix(basis);
-  // Sit the handle in the palm center: offset from the wrist toward the
-  // fingers, along the finger direction.
+  // Sit the HANDLE in the palm center: offset from the wrist toward the
+  // fingers (finger direction), and shift along the blade so the handle
+  // (below the guard) lands in the fist instead of the blade middle.
   const localFinger = fingerDir.clone().applyQuaternion(invHandQuat).normalize();
-  weapon.position.copy(localFinger).multiplyScalar(PALM_OFFSET);
+  const handleY = findHandleOffsetY(weapon);
+  weapon.position
+    .copy(localFinger)
+    .multiplyScalar(PALM_OFFSET)
+    .add(localBlade.clone().multiplyScalar(-handleY));
   hand.add(weapon);
 
   // --- Closed grip: curl quaternions applied to the finger joints. ---
@@ -135,6 +140,58 @@ export const attachWeaponAndGrip = (model: Object3D, weapon: Object3D): (() => v
 
 const updateRootMatrixWorld = (model: Object3D): void => {
   model.updateMatrixWorld(true);
+};
+
+/**
+ * Finds the handle's center along the weapon's local Y axis by analyzing
+ * the geometry profile: the guard/tsuba is the widest slice, the handle is
+ * the thin region below it. Returns a negative Y (handle below the origin).
+ */
+const findHandleOffsetY = (weapon: Object3D): number => {
+  const meshes: Mesh[] = [];
+  weapon.traverse((object) => {
+    const m = object as Mesh;
+    if (m.isMesh) meshes.push(m);
+  });
+  const mesh = meshes[0];
+  if (!mesh) return -0.35;
+  const position = (mesh.geometry as BufferGeometry).getAttribute("position");
+  if (!position) return -0.35;
+  // Bucket the vertices by Y (0.05 slices) and track the widest slice
+  // (the guard) and the extent of the thin region below it (the handle).
+  const BUCKET = 0.05;
+  type Slice = { maxR: number; minY: number; maxY: number };
+  const slices = new Map<number, Slice>();
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i);
+    const y = position.getY(i);
+    const z = position.getZ(i);
+    const key = Math.floor(y / BUCKET);
+    const radius = Math.sqrt(x * x + z * z);
+    const slice = slices.get(key) ?? { maxR: 0, minY: y, maxY: y };
+    slice.maxR = Math.max(slice.maxR, radius);
+    slice.minY = Math.min(slice.minY, y);
+    slice.maxY = Math.max(slice.maxY, y);
+    slices.set(key, slice);
+  }
+  let guardKey = 0;
+  let guardR = -1;
+  for (const [key, slice] of slices) {
+    if (slice.maxR > guardR) {
+      guardR = slice.maxR;
+      guardKey = key;
+    }
+  }
+  let minY = Number.POSITIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (const [key, slice] of slices) {
+    if (key < guardKey) {
+      minY = Math.min(minY, slice.minY);
+      maxY = Math.max(maxY, slice.maxY);
+    }
+  }
+  if (!Number.isFinite(minY) || !Number.isFinite(maxY)) return -0.35;
+  return (minY + maxY) / 2;
 };
 
 const findBone = (model: Object3D, name: string): Bone | null => {
