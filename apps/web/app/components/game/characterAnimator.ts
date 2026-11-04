@@ -69,6 +69,35 @@ export class CharacterAnimator {
     this.play(this.clipNames.walk, true, crossfadeS);
   }
 
+  /**
+   * Plays a one-shot clip (attack, jump...) time-scaled to fit durationMs,
+   * then crossfades back to idle. onFinished fires when the clip ends.
+   */
+  playOnce(clipName: string, durationMs: number, onFinished?: () => void): void {
+    const clip = this.clips.get(clipName);
+    if (!clip) {
+      onFinished?.();
+      return;
+    }
+    const action = this.mixer.clipAction(clip);
+    action.setLoop(LoopOnce, 1);
+    action.clampWhenFinished = true;
+    action.reset();
+    this.current?.stop();
+    this.current = action;
+    // Time-scale the clip so it completes within durationMs.
+    action.timeScale = clip.duration / Math.max(0.001, durationMs / 1000);
+    action.play();
+
+    const onMixerFinished = (event: { action: ClipAction }): void => {
+      if (event.action !== action) return;
+      this.mixer.removeEventListener("finished", onMixerFinished);
+      this.playIdle();
+      onFinished?.();
+    };
+    this.mixer.addEventListener("finished", onMixerFinished);
+  }
+
   /** Advances the mixer. Call once per rendered frame with the frame delta. */
   update(deltaSeconds: number): void {
     this.mixer.update(deltaSeconds);

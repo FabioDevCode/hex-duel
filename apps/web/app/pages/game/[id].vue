@@ -12,11 +12,13 @@
         @move-target="onMoveTarget"
         @attack-direction="onAttackDirection"
         @aim-locked-change="onAimLockedChange"
+        @hit-landed="onHitLanded"
+        @resolution-end="onResolutionEnd"
       />
       <GameHUD
         :turn-number="gameState?.turnNumber ?? 0"
         :deadline-at="gameState?.turnDeadlineAt ?? 0"
-        :players="gameState?.players"
+        :players="displayedPlayers"
         :selected-action="selectedAction"
         :locked="locked"
         :opponent-ready="opponentReady"
@@ -80,9 +82,14 @@ const attackDirection = ref<number>(0);
 const aimLocked = ref(false);
 type ResolutionStep =
   | { kind: "move"; seat: 0 | 1; from: Vector2; to: Vector2 }
-  | { kind: "attack"; seat: 0 | 1; type: AttackType; direction: number };
+  | { kind: "attack"; seat: 0 | 1; type: AttackType; direction: number; hit: boolean };
 
 const resolution = ref<{ steps: ResolutionStep[] } | null>(null);
+// Crystals displayed in the HUD: during the resolution animation the
+// server state is already patched, so we hold the pre-attack values and
+// only let a crystal break when the attack animation actually lands.
+const crystalsBeforeTurn = ref<[number, number] | null>(null);
+const crystalsHold = ref<[number, number] | null>(null);
 type RevealedEntry = {
   seat: 0 | 1;
   kind: "move" | "attack";
@@ -122,6 +129,37 @@ const cancelPrivateRoom = async (): Promise<void> => {
   if (privateCodeKey.value) sessionStorage.removeItem(privateCodeKey.value);
   await cancel();
   router.push("/play");
+};
+
+// Players as displayed: crystals are held during the resolution animation
+// and released seat by seat when the attack animations land (or all at
+// once when the resolution ends).
+const displayedPlayers = computed(() => {
+  const players = gameState.value?.players;
+  if (!players) return players;
+  const hold = crystalsHold.value;
+  if (!hold) return players;
+  return players.map((player, index) => ({
+    ...player,
+    crystals: hold[index as 0 | 1] ?? player.crystals,
+  }));
+});
+
+/** A crystal breaks at the end of the attacker's animation. */
+const onHitLanded = (targetSeat: 0 | 1): void => {
+  const hold = crystalsHold.value;
+  if (!hold) return;
+  const after = gameState.value?.players?.[targetSeat]?.crystals;
+  if (after === undefined) return;
+  crystalsHold.value = [
+    targetSeat === 0 ? after : hold[0],
+    targetSeat === 1 ? after : hold[1],
+  ];
+};
+
+/** Resolution sequence over: display the authoritative crystals again. */
+const onResolutionEnd = (): void => {
+  crystalsHold.value = null;
 };
 
 const playerPositions = computed<[Vector2, Vector2]>(() => {
@@ -230,9 +268,17 @@ type ResolvedPlayer = {
   isAlive: boolean;
 };
 
+type ResolvedAttack = {
+  attackerSeat: number;
+  targetSeat: number;
+  attackType: AttackType;
+  hits: boolean;
+};
+
 type ResolvedTurn = {
   turnNumber: number;
   players: [ResolvedPlayer, ResolvedPlayer];
+  attacks?: ResolvedAttack[];
 };
 
 const onTurnRevealed = (message: RevealedTurn): void => {
@@ -257,6 +303,10 @@ const onTurnRevealed = (message: RevealedTurn): void => {
   // The state patch for this turn has not been applied yet at reveal time,
   // so the synced positions still hold this turn's starting positions.
   positionsBeforeTurn.value = [...playerPositions.value] as [Vector2, Vector2];
+  crystalsBeforeTurn.value = [
+    gameState.value?.players?.[0]?.crystals ?? 3,
+    gameState.value?.players?.[1]?.crystals ?? 3,
+  ];
 };
 
 /**
@@ -265,9 +315,18 @@ const onTurnRevealed = (message: RevealedTurn): void => {
  * - attack vs attack: first-validated first
  * - MOVE vs attack: the move always plays first
  */
+/** Whether the seat's attack of this type landed (server outcome). */
+const attackHits = (
+  attacks: ResolvedAttack[] | undefined,
+  seat: 0 | 1,
+  type: AttackType,
+): boolean =>
+  attacks?.find((a) => a.attackerSeat === seat && a.attackType === type)?.hits ?? false;
+
 const buildResolutionSteps = (
   moveStep: (seat: 0 | 1) => ResolutionStep | null,
   entries: RevealedEntry[],
+  attacks: ResolvedAttack[] | undefined,
 ): ResolutionStep[] => {
   const bySeat = new Map(entries.map((e) => [e.seat as 0 | 1, e]));
   const ordered = [...entries].sort((a, b) => a.order - b.order);
@@ -284,6 +343,7 @@ const buildResolutionSteps = (
         seat: entry.seat,
         type: entry.type,
         direction: entry.direction,
+        hit: attackHits(attacks, entry.seat, entry.type),
       });
     }
   };
@@ -327,6 +387,12 @@ const bindMessages = (): void => {
   r.onMessage("turn_resolved", (message: ResolvedTurn) => {
     const before = positionsBeforeTurn.value ?? ([...playerPositions.value] as [Vector2, Vector2]);
     positionsBeforeTurn.value = null;
+    // Hold the pre-attack crystals until the attack animation lands.
+    crystalsHold.value = crystalsBeforeTurn.value ?? [
+      message.players[0].crystals,
+      message.players[1].crystals,
+    ];
+    crystalsBeforeTurn.value = null;
     const moveStep = (seat: 0 | 1): ResolutionStep | null => {
       const resolved = message.players[seat];
       const from = before[seat];
@@ -335,7 +401,9 @@ const bindMessages = (): void => {
       }
       return null;
     };
-    resolution.value = { steps: buildResolutionSteps(moveStep, revealedEntries.value) };
+    resolution.value = {
+      steps: buildResolutionSteps(moveStep, revealedEntries.value, message.attacks),
+    };
     revealedEntries.value = [];
   });
   r.onMessage("game_finished", (message: { result: { outcome: string; winnerSeat?: number } }) => {

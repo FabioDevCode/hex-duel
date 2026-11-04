@@ -187,6 +187,7 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     this.broadcast("turn_resolved", {
       turnNumber: resolution.turnNumber,
       players: resolution.players,
+      attacks: resolution.attacks,
     });
 
     if (resolution.finished && resolution.winner) {

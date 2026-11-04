@@ -45,12 +45,14 @@ const props = defineProps<{
   resolution: {
     steps: (
       | { kind: "move"; seat: 0 | 1; from: GameVector2; to: GameVector2 }
-      | { kind: "attack"; seat: 0 | 1; type: AttackType; direction: number }
+      | { kind: "attack"; seat: 0 | 1; type: AttackType; direction: number; hit: boolean }
     )[];
   } | null;
 }>();
 
 const emit = defineEmits<{
+  hitLanded: [targetSeat: 0 | 1];
+  resolutionEnd: [];
   moveTarget: [target: GameVector2];
   attackDirection: [directionDeg: number];
   aimLockedChange: [locked: boolean];
@@ -68,6 +70,12 @@ let lastFrameTime = 0;
 // Clip names per model (see the manifests beside the .glb files).
 
 // Indicator colors: move = blue, attacks = per type (STRIKE red, SNIPER gold).
+// Attack animation clip per seat and attack type (see the manifests).
+const ATTACK_CLIPS: Record<0 | 1, Record<AttackType, string>> = {
+  0: { STRIKE: "Sword_Judgment", SNIPER: "Basic_Jump" }, // samourai
+  1: { STRIKE: "Axe_Spin_Attack", SNIPER: "Basic_Jump" }, // chevalier
+};
+
 const MOVE_COLOR = 0x03489F;
 const ATTACK_COLORS: Record<AttackType, number> = {
   STRIKE: 0xA91819,
@@ -457,7 +465,7 @@ watch(() => props.interactive, updateIndicators);
 
 type ResolutionStep =
   | { kind: "move"; seat: 0 | 1; from: GameVector2; to: GameVector2 }
-  | { kind: "attack"; seat: 0 | 1; type: AttackType; direction: number };
+  | { kind: "attack"; seat: 0 | 1; type: AttackType; direction: number; hit: boolean };
 
 type ActiveStep =
   | {
@@ -472,10 +480,23 @@ type ActiveStep =
       walkStarted: boolean;
       startedAt: number;
     }
-  | { kind: "attack"; seat: 0 | 1; cone: Mesh; startedAt: number };
+  | {
+      kind: "attack";
+      seat: 0 | 1;
+      type: AttackType;
+      hit: boolean;
+      turnFromYaw: number;
+      turnToYaw: number;
+      turnDurationMs: number;
+      attackStarted: boolean;
+      attackDone: boolean;
+      startedAt: number;
+    };
 
 const MOVE_DURATION_MS = 1500;
-const ATTACK_CONE_MS = 1200;
+// Attack animation length (clip time-scaled to fit); pivot + anim must
+// stay within the server's 4s resolution window.
+const ATTACK_ANIM_MS = 1500;
 
 const queuedSteps = ref<ResolutionStep[]>([]);
 const activeStep = ref<ActiveStep | null>(null);
@@ -513,6 +534,7 @@ const startNextStep = (): void => {
     activeStep.value = null;
     isAnimatingResolution.value = false;
     updateCapsulePositions();
+    emit("resolutionEnd");
     return;
   }
   if (next.kind === "move") {
@@ -532,23 +554,26 @@ const startNextStep = (): void => {
       walkStarted: false,
       startedAt: performance.now(),
     };
-  } else {
-    if (!scene) return;
-    const params = attackParams(next.type);
-    const cone = new Mesh(
-      buildConeWedge(params.angle, params.range),
-      new MeshBasicMaterial({
-        color: next.seat === 0 ? 0xff4d5a : 0x4d91ff,
-        transparent: true,
-        opacity: 0.45,
-        side: 2,
-      }),
-    );
-    const origin = next.kind === "attack" ? props.playerPositions[next.seat] : { x: 0, z: 0 };
-    cone.position.set(origin.x, 0.7, origin.z);
-    cone.rotation.y = -degToRad(next.direction);
-    scene.add(cone);
-    activeStep.value = { kind: "attack", seat: next.seat, cone, startedAt: performance.now() };
+  } else if (next.kind === "attack") {
+    // Attack step: no cone printed on the floor anymore - the character
+    // pivots toward the attack direction, then plays its attack clip.
+    const group = capsules?.[next.seat];
+    const targetYaw = degToRad(next.direction) - Math.PI / 2 - modelYawOffset(next.seat);
+    const currentYaw = group ? group.rotation.y : targetYaw;
+    const turnAngle = Math.abs(shortestAngle(currentYaw, targetYaw));
+    const turnDurationMs = Math.min(500, Math.max(120, (turnAngle / Math.PI) * 500));
+    activeStep.value = {
+      kind: "attack",
+      seat: next.seat,
+      type: next.type,
+      hit: next.hit,
+      turnFromYaw: currentYaw,
+      turnToYaw: currentYaw + shortestAngle(currentYaw, targetYaw),
+      turnDurationMs,
+      attackStarted: false,
+      attackDone: false,
+      startedAt: performance.now(),
+    };
   }
 };
 
@@ -594,16 +619,35 @@ const stepResolution = (): void => {
     return;
   }
 
-  const t = (now - step.startedAt) / ATTACK_CONE_MS;
-  if (t >= 1) {
-    scene?.remove(step.cone);
-    step.cone.geometry.dispose();
-    (step.cone.material as MeshBasicMaterial).dispose();
-    startNextStep();
-    return;
+  // Attack step: pivot toward the direction, play the attack clip, then
+  // the target's crystal breaks at the very end of the animation.
+  if (step.kind === "attack") {
+    const group = capsules[step.seat];
+    const elapsed = now - step.startedAt;
+    // Phase 1: pivot in place toward the attack direction.
+    if (elapsed < step.turnDurationMs) {
+      const t = Math.min(1, elapsed / step.turnDurationMs);
+      const eased = t * t * (3 - 2 * t);
+      group.rotation.y = step.turnFromYaw + (step.turnToYaw - step.turnFromYaw) * eased;
+      return;
+    }
+    // Phase 2: play the attack clip (time-scaled to ATTACK_ANIM_MS).
+    group.rotation.y = step.turnToYaw;
+    if (!step.attackStarted) {
+      step.attackStarted = true;
+      const clip = ATTACK_CLIPS[step.seat][step.type];
+      animators?.[step.seat]?.playOnce(clip, ATTACK_ANIM_MS, () => {
+        if (activeStep.value?.kind === "attack" && activeStep.value.seat === step.seat) {
+          activeStep.value.attackDone = true;
+        }
+      });
+    }
+    if (step.attackDone) {
+      if (step.hit) emit("hitLanded", step.seat === 0 ? 1 : 0);
+      activeStep.value = null;
+      startNextStep();
+    }
   }
-  const material = step.cone.material as MeshBasicMaterial;
-  material.opacity = 0.45 * (1 - t);
 };
 
 
