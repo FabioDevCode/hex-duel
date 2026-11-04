@@ -558,7 +558,7 @@ const startNextStep = (): void => {
     // Attack step: no cone printed on the floor anymore - the character
     // pivots toward the attack direction, then plays its attack clip.
     const group = capsules?.[next.seat];
-    const targetYaw = degToRad(next.direction) - Math.PI / 2 - modelYawOffset(next.seat);
+    const targetYaw = Math.PI / 2 - degToRad(next.direction) - modelYawOffset(next.seat);
     const currentYaw = group ? group.rotation.y : targetYaw;
     const turnAngle = Math.abs(shortestAngle(currentYaw, targetYaw));
     const turnDurationMs = Math.min(500, Math.max(120, (turnAngle / Math.PI) * 500));
