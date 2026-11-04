@@ -28,11 +28,15 @@ export class CharacterAnimator {
   private readonly clips = new Map<string, AnimationClip>();
   private current: ClipAction | null = null;
 
+  private readonly postUpdate?: () => void;
+
   constructor(
     model: Object3D,
     clips: AnimationClip[],
     private readonly clipNames: CharacterAnimatorClips,
+    postUpdate?: () => void,
   ) {
+    this.postUpdate = postUpdate;
     for (const clip of clips) {
       this.clips.set(clip.name, clip);
     }
@@ -101,5 +105,8 @@ export class CharacterAnimator {
   /** Advances the mixer. Call once per rendered frame with the frame delta. */
   update(deltaSeconds: number): void {
     this.mixer.update(deltaSeconds);
+    // Applied after the mixer so per-frame overrides (e.g. a closed grip
+    // around a weapon) always win over the clip's finger poses.
+    this.postUpdate?.();
   }
 }

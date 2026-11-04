@@ -32,6 +32,7 @@ import type { AttackType, Vector2 as GameVector2 } from "@hex-duel/shared";
 import { GAME_CONFIG } from "@hex-duel/shared";
 import { buildArenaBounds, isInsideArena } from "@hex-duel/game-logic";
 import { CHARACTER_CLIPS, loadCharacterModel } from "./characterModels";
+import { attachWeaponAndGrip, loadWeaponModel } from "./characterWeapon";
 import { CharacterAnimator } from "./characterAnimator";
 import { createArenaLighting, enableCharacterShadows } from "./arenaLighting";
 import type { ArenaLighting } from "./arenaLighting";
@@ -179,13 +180,16 @@ const buildCapsules = (): void => {
     // GLB character (red samurai / blue knight), loaded asynchronously,
     // normalized to ~2x the previous character height, facing the opponent.
     // The animator starts the idle loop as soon as the model is loaded,
-    // so the T-pose never shows.
-    void loadCharacterModel(seat)
-      .then(({ model, animations }) => {
-        // Skinned GLB: every mesh in the hierarchy must cast shadows.
+    // so the T-pose never shows. The weapon is attached to the right-hand
+    // bone (it follows every animation) and the fingers close around it.
+    void Promise.all([loadCharacterModel(seat), loadWeaponModel(seat)])
+      .then(([{ model, animations }, weapon]) => {
+        const applyGrip = attachWeaponAndGrip(model, weapon);
+        // Skinned GLB: every mesh in the hierarchy must cast shadows
+        // (the weapon is now part of the hierarchy and casts too).
         enableCharacterShadows(model);
         groups[seat].add(model);
-        mixers[seat] = new CharacterAnimator(model, animations, CHARACTER_CLIPS[seat]);
+        mixers[seat] = new CharacterAnimator(model, animations, CHARACTER_CLIPS[seat], applyGrip);
         animators = mixers;
       })
       .catch((error: unknown) => {
