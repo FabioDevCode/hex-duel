@@ -44,6 +44,7 @@
 
     <div v-if="surrenderOpen" class="modal-backdrop" @click.self="surrenderOpen = false">
       <div class="modal panel">
+        <img class="modal-img" src="/img/i-giveup.png" alt="Give Up">
         <h2 class="modal-title">{{ t("surrender.title") }}</h2>
         <p class="modal-text">{{ t("surrender.text") }}</p>
         <div class="modal-actions">
@@ -218,6 +219,10 @@ export type { AttackType };
   align-items: center;
   min-width: 320px;
   text-align: center;
+}
+
+.modal-img {
+  width: 180px;
 }
 
 .modal-title {
