@@ -13,9 +13,15 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 const TARGET_HEIGHT = 4.4;
 
-// Served statically from public/models (see the manifests in
-// app/assets/models for reference data on these files).
-const MODEL_URLS = ["/models/samourai.glb", "/models/chevalier.glb"] as const;
+// Served statically from public/models (see the *.manifest.json files
+// beside them for reference data on these files).
+const MODEL_URLS = ["/models/hex-samourai.glb", "/models/hex-chevalier.glb"] as const;
+
+// Clip names from the manifests (idle differs from the older models).
+export const CHARACTER_CLIPS = [
+  { idle: "Short_Breathe_and_Look_Around", walk: "Walking" },
+  { idle: "Short_Breathe_and_Look_Around", walk: "Walking" },
+] as const;
 
 let loader: GLTFLoader | null = null;
 const getLoader = (): GLTFLoader => {

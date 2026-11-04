@@ -1,0 +1,41 @@
+{
+  "file": "sabre.glb",
+  "bytes": 3246656,
+  "generator": "https://github.com/mikedh/trimesh",
+  "sceneNodes": 2,
+  "meshes": [
+    {
+      "name": "geometry_0",
+      "vertices": 13129,
+      "triangles": 15477,
+      "morphTargets": 0
+    }
+  ],
+  "materials": [
+    {
+      "name": "(unnamed)",
+      "type": "MeshStandardMaterial",
+      "vertexColors": false,
+      "skinning": false
+    }
+  ],
+  "bones": [],
+  "animations": [],
+  "boundingBox": {
+    "min": [
+      -0.089,
+      -0.475,
+      -0.053
+    ],
+    "max": [
+      0.085,
+      0.475,
+      0.052
+    ]
+  },
+  "size": [
+    0.174,
+    0.95,
+    0.105
+  ]
+}

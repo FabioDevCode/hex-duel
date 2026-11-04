@@ -31,7 +31,7 @@ import {
 import type { AttackType, Vector2 as GameVector2 } from "@hex-duel/shared";
 import { GAME_CONFIG } from "@hex-duel/shared";
 import { buildArenaBounds, isInsideArena } from "@hex-duel/game-logic";
-import { loadCharacterModel } from "./characterModels";
+import { CHARACTER_CLIPS, loadCharacterModel } from "./characterModels";
 import { CharacterAnimator } from "./characterAnimator";
 import { createArenaLighting, enableCharacterShadows } from "./arenaLighting";
 import type { ArenaLighting } from "./arenaLighting";
@@ -65,11 +65,7 @@ let lighting: ArenaLighting | null = null;
 let animators: [CharacterAnimator, CharacterAnimator] | null = null;
 let lastFrameTime = 0;
 
-// Clip names shared by both models (see the manifests beside the .glb files).
-const CLIP_NAMES = {
-  idle: "Axe_Breathe_and_Look_Around",
-  walk: "Walking",
-} as const;
+// Clip names per model (see the manifests beside the .glb files).
 let raycaster = new Raycaster();
 let groundPlane = new Plane(new Vector3(0, 1, 0), 0);
 let mouseNDC = new Vector2();
@@ -174,7 +170,7 @@ const buildCapsules = (): void => {
         // Skinned GLB: every mesh in the hierarchy must cast shadows.
         enableCharacterShadows(model);
         groups[seat].add(model);
-        mixers[seat] = new CharacterAnimator(model, animations, CLIP_NAMES);
+        mixers[seat] = new CharacterAnimator(model, animations, CHARACTER_CLIPS[seat]);
         animators = mixers;
       })
       .catch((error: unknown) => {
