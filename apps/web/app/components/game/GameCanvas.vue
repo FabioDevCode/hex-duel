@@ -68,9 +68,9 @@ let lastFrameTime = 0;
 // Clip names per model (see the manifests beside the .glb files).
 
 // Indicator colors: move = blue, attacks = per type (STRIKE red, SNIPER gold).
-const MOVE_COLOR = 0x4d91ff;
+const MOVE_COLOR = 0x03489F;
 const ATTACK_COLORS: Record<AttackType, number> = {
-  STRIKE: 0xff4d5a,
+  STRIKE: 0xA91819,
   SNIPER: 0xffd24d,
 };
 let raycaster = new Raycaster();
