@@ -26,12 +26,21 @@
         @surrender="onSurrender"
       />
       <p v-if="submitError" class="submit-error">{{ submitError }}</p>
-      <div v-if="finished" class="result-overlay panel">
-        <h1 class="result-title">{{ resultTitle }}</h1>
-        <p class="text-secondary">{{ turnsPlayed }}</p>
-        <div class="result-actions">
-          <button class="btn btn-primary" @click="playAgain">{{ t("result.playAgain") }}</button>
-          <button class="btn" @click="backToMenu">{{ t("result.backToMenu") }}</button>
+      <div v-if="finished" class="result-backdrop">
+        <div class="result-modal panel">
+          <img
+            v-if="resultImage"
+            class="result-img"
+            :src="resultImage"
+            :alt="resultTitle"
+            draggable="false"
+          >
+          <h1 class="result-title">{{ resultTitle }}</h1>
+          <p class="text-secondary">{{ turnsPlayed }}</p>
+          <div class="result-actions">
+            <button class="btn btn-primary" @click="playAgain">{{ t("result.playAgain") }}</button>
+            <button class="btn" @click="backToMenu">{{ t("result.backToMenu") }}</button>
+          </div>
         </div>
       </div>
       <div v-else-if="waitingForOpponent" class="result-overlay panel">
@@ -154,6 +163,13 @@ const resultTitle = computed(() => {
 });
 
 const turnsPlayed = computed(() => `${gameState.value?.turnNumber ?? 0} / ${GAME_CONFIG.maxTurns}`);
+
+// Victory/defeat illustration (see public/img/i-*.png); no image on a draw.
+const resultImage = computed(() => {
+  if (!gameResult.value) return null;
+  if (gameResult.value.outcome === "DRAW") return null;
+  return gameResult.value.winnerSeat === mySeat.value ? "/img/i-victory.png" : "/img/i-defeat.png";
+});
 
 const onMoveTarget = (target: Vector2): void => {
   if (locked.value) return;
@@ -385,6 +401,29 @@ onBeforeUnmount(() => {
   border-radius: 6px;
   padding: 8px 16px;
   z-index: 5;
+}
+
+.result-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.result-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  text-align: center;
+  min-width: 320px;
+}
+
+.result-img {
+  width: 180px;
 }
 
 .result-overlay {
