@@ -15,9 +15,9 @@ const TARGET_HEIGHT = 4.4;
 
 // Served statically from public/models (see the *.manifest.json files
 // beside them for reference data on these files).
-const MODEL_URLS = ["/models/hex-samourai.glb", "/models/hex-chevalier.glb"] as const;
+const MODEL_URLS = ["/models/hex-ult-samourai.glb", "/models/hex-ult-chevalier.glb"] as const;
 
-// Clip names from the manifests (idle differs from the older models).
+// Clip names from the manifests - identical for both models.
 export const CHARACTER_CLIPS = [
   { idle: "Short_Breathe_and_Look_Around", walk: "Walking" },
   { idle: "Short_Breathe_and_Look_Around", walk: "Walking" },

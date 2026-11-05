@@ -71,10 +71,11 @@ let lastFrameTime = 0;
 // Clip names per model (see the manifests beside the .glb files).
 
 // Indicator colors: move = blue, attacks = per type (STRIKE red, SNIPER gold).
-// Attack animation clip per seat and attack type (see the manifests).
+// Attack animation clip per attack type (see the manifests) - the two
+// hex-ult models share the same clip names.
 const ATTACK_CLIPS: Record<0 | 1, Record<AttackType, string>> = {
-  0: { STRIKE: "Sword_Judgment", SNIPER: "Basic_Jump" }, // samourai
-  1: { STRIKE: "Axe_Spin_Attack", SNIPER: "Basic_Jump" }, // chevalier
+  0: { STRIKE: "Right_Hand_Sword_Slash", SNIPER: "Attack" }, // samourai
+  1: { STRIKE: "Right_Hand_Sword_Slash", SNIPER: "Attack" }, // chevalier
 };
 
 const MOVE_COLOR = 0x03489F;
