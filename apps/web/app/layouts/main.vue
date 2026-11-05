@@ -43,7 +43,7 @@ const { t } = useI18n();
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 32px;
+  padding: 16px;
   background-color: transparent;
 }
 

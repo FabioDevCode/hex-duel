@@ -1,7 +1,7 @@
 <template>
   <div class="profile">
     <h1>{{ t("nav.profile") }}</h1>
-    <div v-if="stats" class="stats panel">
+    <!-- <div v-if="stats" class="stats panel">
       <div class="stat">
         <span class="stat-value">{{ stats.matchesPlayed }}</span>
         <span class="stat-label text-secondary">{{ t("profile.matches") }}</span>
@@ -19,7 +19,7 @@
         <span class="stat-label text-secondary">{{ t("profile.draws") }}</span>
       </div>
     </div>
-    <p v-else class="text-secondary">{{ t("profile.noData") }}</p>
+    <p v-else class="text-secondary">{{ t("profile.noData") }}</p> -->
     <div class="pseudonym panel">
       <label class="pseudo-label" for="pseudo-input">{{ t("profile.pseudonym") }}</label>
       <div class="pseudo-row">
@@ -36,6 +36,12 @@
       <p v-if="pseudoFeedback === 'saved'" class="pseudo-feedback ok">{{ t("profile.pseudonymSaved") }}</p>
       <p v-else-if="pseudoFeedback === 'invalid'" class="pseudo-feedback error">{{ t("profile.pseudonymInvalid") }}</p>
     </div>
+
+    <hr class="separator">
+
+    <NuxtLink to="/" class="btn back-btn">
+      {{ t("result.backToMenu") }}
+    </NuxtLink>
   </div>
 </template>
 
@@ -78,6 +84,10 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+h1 {
+  color: var(--bg-panel);
+}
+
 .profile {
   flex: 1;
   display: flex;
@@ -93,11 +103,15 @@ onMounted(async () => {
   padding: 32px 48px;
 }
 
+.separator {
+  width: 300px;
+}
+
 .pseudonym {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 20px 28px;
+  padding: 0px;
   min-width: 320px;
 }
 
@@ -105,6 +119,7 @@ onMounted(async () => {
   font-weight: 700;
   letter-spacing: 0.06em;
   font-size: 0.85rem;
+  color: var(--bg-panel);
 }
 
 .pseudo-row {
@@ -117,9 +132,13 @@ onMounted(async () => {
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg-panel);
+  background-color: rgba(34, 39, 53, .8);
   color: var(--text-main);
   font-size: 1rem;
+}
+
+input:focus {
+  outline: none;
 }
 
 .pseudo-feedback {

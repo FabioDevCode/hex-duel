@@ -56,8 +56,7 @@ const toggleLocale = (): void => {
 }
 
 .lang-flag {
-  width: 42px;
-  height: 30px;
+  height: 38px;
   object-fit: contain;
   display: block;
   pointer-events: none;

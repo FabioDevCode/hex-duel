@@ -60,8 +60,8 @@
       </div>
     </div>
     <template v-if="!finished">
-      <p v-if="opponentReady" class="opponent-status">{{ t("game.opponentReady") }}</p>
-      <p v-else class="opponent-status text-tertiaire">{{ t("game.opponentChoosing") }}</p>
+      <!-- <p v-if="opponentReady" class="opponent-status">{{ t("game.opponentReady") }}</p> -->
+      <!-- <p v-else class="opponent-status text-tertiaire">{{ t("game.opponentChoosing") }}</p> -->
     </template>
   </div>
 </template>
@@ -161,7 +161,7 @@ export type { AttackType };
   gap: 12px;
   align-self: center;
   background-color: transparent;
-  padding: 0px;
+  padding: 8px 0px;
   border: 0px solid transparent;
 }
 

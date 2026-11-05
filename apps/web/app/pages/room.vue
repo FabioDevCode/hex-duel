@@ -105,10 +105,11 @@ const joinRoom = async (): Promise<void> => {
 }
 
 .code-input {
-  background-color: rgba(203, 89, 1, 0.15);
-  border: 2px solid #170E1A;
+  background-color: rgba(34, 39, 53, .8);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+
   border-radius: 8px;
-  color: #170E1A;
   padding: 12px;
   font-size: 1.1rem;
   font-weight: 600;
@@ -119,8 +120,8 @@ const joinRoom = async (): Promise<void> => {
 }
 
 input::placeholder {
-  color: #CB5901;
-  font-weight: 400;
+  /* color: #CB5901;
+  font-weight: 400; */
   opacity: .85;
 }
 
