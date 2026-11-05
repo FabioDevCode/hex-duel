@@ -1,17 +1,20 @@
 <template>
   <div class="hud">
     <div class="hud-top panel">
-      <PlayerStatus
+      <!-- Corner profiles: bust + chain, crystals above the chain,
+           "Vous"/"Adversaire" below. Hidden once the game is over. -->
+      <PlayerProfile
+        v-if="!finished"
         :name="mySeat === 0 ? t('game.you') : t('game.opponent')"
         :seat="0"
         :crystals="players?.[0]?.crystals ?? 0"
       />
-      <!-- Hidden once the game is over: the result overlay replaces them. -->
       <div v-if="!finished" class="hud-center">
         <span class="turn">{{ t("game.turn", { turn: turnNumber, max: GAME_CONFIG.maxTurns }) }}</span>
         <TurnTimer v-if="deadlineAt > 0" :deadline-at="deadlineAt" />
       </div>
-      <PlayerStatus
+      <PlayerProfile
+        v-if="!finished"
         :name="mySeat === 1 ? t('game.you') : t('game.opponent')"
         :seat="1"
         :crystals="players?.[1]?.crystals ?? 0"
@@ -68,7 +71,7 @@ import { useI18n } from "~/composables/useI18n";
 import { GAME_CONFIG } from "@hex-duel/shared";
 import type { AttackType, Seat } from "@hex-duel/shared";
 import ActionSelector, { type SelectorAction } from "../ui/ActionSelector.vue";
-import PlayerStatus from "../ui/PlayerStatus.vue";
+import PlayerProfile from "../ui/PlayerProfile.vue";
 import TurnTimer from "../ui/TurnTimer.vue";
 
 export type HudAction = SelectorAction;
