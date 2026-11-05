@@ -6,7 +6,8 @@
         :seat="0"
         :crystals="players?.[0]?.crystals ?? 0"
       />
-      <div class="hud-center">
+      <!-- Hidden once the game is over: the result overlay replaces them. -->
+      <div v-if="!finished" class="hud-center">
         <span class="turn">{{ t("game.turn", { turn: turnNumber, max: GAME_CONFIG.maxTurns }) }}</span>
         <TurnTimer v-if="deadlineAt > 0" :deadline-at="deadlineAt" />
       </div>
@@ -55,8 +56,10 @@
         </div>
       </div>
     </div>
-    <p v-if="opponentReady" class="opponent-status">{{ t("game.opponentReady") }}</p>
-    <p v-else class="opponent-status text-tertiaire">{{ t("game.opponentChoosing") }}</p>
+    <template v-if="!finished">
+      <p v-if="opponentReady" class="opponent-status">{{ t("game.opponentReady") }}</p>
+      <p v-else class="opponent-status text-tertiaire">{{ t("game.opponentChoosing") }}</p>
+    </template>
   </div>
 </template>
 
@@ -79,6 +82,8 @@ defineProps<{
   selectedAction: SelectorAction | null;
   locked: boolean;
   opponentReady: boolean;
+  /** Game over: the turn counter, timer and status texts are hidden. */
+  finished: boolean;
   mySeat: Seat | null;
 }>();
 

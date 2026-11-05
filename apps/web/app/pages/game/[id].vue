@@ -22,6 +22,7 @@
         :selected-action="selectedAction"
         :locked="locked"
         :opponent-ready="opponentReady"
+        :finished="finished"
         :my-seat="mySeat"
         @select-action="onSelectAction"
         @confirm="onConfirm"
