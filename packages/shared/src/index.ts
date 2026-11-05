@@ -4,3 +4,4 @@ export * from "./types/actions";
 export * from "./types/messages";
 export * from "./constants/config";
 export * from "./schemas/messages";
+export * from "./schemas/pseudonym";
