@@ -39,6 +39,7 @@
             draggable="false"
           >
           <h1 class="result-title">{{ resultTitle }}</h1>
+          <p class="result-players">{{ resultPlayers }}</p>
           <p class="text-secondary">{{ turnsPlayed }}</p>
           <div class="result-actions">
             <button class="btn btn-primary" @click="playAgain">{{ t("result.playAgain") }}</button>
@@ -204,6 +205,14 @@ const resultTitle = computed(() => {
 });
 
 const turnsPlayed = computed(() => `${gameState.value?.turnNumber ?? 0} / ${GAME_CONFIG.maxTurns}`);
+
+// Both players' pseudonyms on the result screen (D-142/143).
+const resultPlayers = computed(() => {
+  const players = gameState.value?.players;
+  const red = players?.[0]?.pseudonym ?? t("game.opponent");
+  const blue = players?.[1]?.pseudonym ?? t("game.opponent");
+  return `${red}  vs  ${blue}`;
+});
 
 // Victory/defeat illustration (see public/img/i-*.png); no image on a draw.
 const resultImage = computed(() => {
@@ -494,6 +503,11 @@ onBeforeUnmount(() => {
 
 .result-img {
   width: 180px;
+}
+
+.result-players {
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 

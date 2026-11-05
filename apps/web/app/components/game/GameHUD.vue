@@ -5,7 +5,7 @@
            "Vous"/"Adversaire" below. Hidden once the game is over. -->
       <PlayerProfile
         v-if="!finished"
-        :name="mySeat === 0 ? t('game.you') : t('game.opponent')"
+        :name="seatName(0)"
         :seat="0"
         :crystals="players?.[0]?.crystals ?? 0"
       />
@@ -15,7 +15,7 @@
       </div>
       <PlayerProfile
         v-if="!finished"
-        :name="mySeat === 1 ? t('game.you') : t('game.opponent')"
+        :name="seatName(1)"
         :seat="1"
         :crystals="players?.[1]?.crystals ?? 0"
       />
@@ -78,10 +78,16 @@ export type HudAction = SelectorAction;
 
 const { t } = useI18n();
 
-defineProps<{
+const props = defineProps<{
   turnNumber: number;
   deadlineAt: number;
-  players: { seat: Seat; crystals: number; isAlive: boolean; hasValidated: boolean }[] | undefined;
+  players: {
+    seat: Seat;
+    pseudonym?: string;
+    crystals: number;
+    isAlive: boolean;
+    hasValidated: boolean;
+  }[] | undefined;
   selectedAction: SelectorAction | null;
   locked: boolean;
   opponentReady: boolean;
@@ -89,6 +95,15 @@ defineProps<{
   finished: boolean;
   mySeat: Seat | null;
 }>();
+
+// Display pseudonym of the seat (D-142/143), with a "you" marker on my own
+// side; falls back to the generic label while the state is not synced yet.
+const seatName = (seat: 0 | 1): string => {
+  const pseudonym = props.players?.[seat]?.pseudonym;
+  const mine = seat === (props.mySeat ?? 0);
+  const base = pseudonym || t(mine ? "game.you" : "game.opponent");
+  return mine ? `${base} (${t("game.you")})` : base;
+};
 
 defineEmits<{
   selectAction: [action: SelectorAction];
