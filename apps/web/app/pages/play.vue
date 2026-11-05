@@ -62,7 +62,6 @@ const { t } = useI18n();
   min-width: 300px;
   font-size: 1em;
   border-radius: 20px;
-  /* corner-shape: scoop; */
   corner-shape: bevel;
   height: max-content;
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(110, 80, 20, 0.4),

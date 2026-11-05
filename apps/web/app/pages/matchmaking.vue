@@ -45,14 +45,24 @@ onBeforeUnmount(() => {
 
 .searching {
   font-size: 1.3rem;
+  font-weight: 600;
+  color: #170E1A;
 }
 
 .spinner {
   width: 48px;
   height: 48px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
+  border: 2px solid #170E1A;
+  corner-shape: bevel;
+  border-radius: 14px;
+  background-image: linear-gradient(
+      160deg,
+      #CB5901,
+      #FD9909,
+      #FCF069,
+      #FD9909,
+      #CB5901
+  );
   animation: spin 1s linear infinite;
 }
 
