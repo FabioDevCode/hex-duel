@@ -47,26 +47,44 @@ const brokenSrc = "/img/crystal-broken-hex.png";
  */
 .player-profile {
   position: relative;
-  width: 300px;
+  width: max-content;
 }
 
 .profile-img {
   display: block;
-  width: 300px;
-  height: 120px;
+  height: 80px;
   object-fit: fill;
   pointer-events: none;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.6));
 }
 
 /* Crystals just above the chain. */
 .crystals {
   position: absolute;
-  bottom: 28px;
+  bottom: 36px;
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
   gap: 8px;
+}
+
+.seat-0 .crystals {
+  justify-content: end;
+}
+
+.seat-0 span {
+  text-align: left;
+  padding-left: 12px;
+}
+
+.seat-1 .crystals {
+  justify-content: start;
+}
+
+.seat-1 span {
+  text-align: right;
+  padding-right: 12px;
 }
 
 /* Same crystal sizing as the previous PlayerStatus. */
@@ -79,7 +97,7 @@ const brokenSrc = "/img/crystal-broken-hex.png";
 
 .crystal.lost {
   opacity: 0.95;
-  transform: scale(0.85);
+  transform: scale(0.95);
 }
 
 /* "Vous" / "Adversaire" just below the chain. */

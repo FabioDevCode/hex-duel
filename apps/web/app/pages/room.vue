@@ -14,6 +14,13 @@
           {{ t("room.join") }}
         </button>
       </form>
+
+      <hr class="separator">
+
+      <NuxtLink to="/" class="btn back-btn">
+        {{ t("room.back") }}
+      </NuxtLink>
+
       <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     </div>
   </div>
@@ -81,7 +88,7 @@ const joinRoom = async (): Promise<void> => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
   width: max-content;
 }
 
@@ -89,9 +96,14 @@ const joinRoom = async (): Promise<void> => {
   padding: 26px 32px !important;
 }
 
+.back-btn {
+  padding: 14px 32px;
+  text-decoration: none;
+}
+
 .separator {
   border: none;
-  height: 3px;
+  height: 2px;
   border-radius: 10px;
   background-color: #170E1A;
   background: linear-gradient(to right, transparent, black, transparent);

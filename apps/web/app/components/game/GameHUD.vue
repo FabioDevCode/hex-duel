@@ -53,7 +53,7 @@
         <p class="modal-text">{{ t("surrender.text") }}</p>
         <div class="modal-actions">
           <button class="btn" @click="surrenderOpen = false">{{ t("surrender.cancel") }}</button>
-          <button class="btn btn-danger" @click="$emit('surrender'); surrenderOpen = false">
+          <button class="btn btn-primary" @click="$emit('surrender'); surrenderOpen = false">
             {{ t("surrender.confirm") }}
           </button>
         </div>
@@ -123,6 +123,7 @@ export type { AttackType };
   gap: 8px;
   background-color: transparent;
   border: 0px solid transparent;
+  padding: 0px 4px;
 }
 
 .hud-center {
