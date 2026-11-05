@@ -7,8 +7,6 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from "~/composables/useI18n";
-const { t, locale, setLocale } = useI18n();
 </script>
 
 <style scoped>
@@ -55,13 +53,6 @@ const { t, locale, setLocale } = useI18n();
   color: var(--text-main);
 }
 
-.lang-select {
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--text-main);
-  padding: 4px 8px;
-}
 
 .layout-main {
   flex: 1;

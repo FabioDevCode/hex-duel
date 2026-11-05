@@ -7,16 +7,10 @@
         </div>
       </NuxtLink>
       <nav class="layout-nav">
-        <!-- <NuxtLink to="/play" class="nav-link">{{ t("nav.play") }}</NuxtLink> -->
-        <NuxtLink to="/profile" class="nav-link">{{ t("nav.profile") }}</NuxtLink>
-        <select
-          class="lang-select"
-          :value="locale"
-          @change="setLocale(($event.target as HTMLSelectElement).value as Locale)"
-        >
-          <option value="fr">FR</option>
-          <option value="en">EN</option>
-        </select>
+        <NuxtLink to="/profile" class="nav-link profile-link" :title="t('nav.profile')">
+          <img src="/img/profil.png" :alt="t('nav.profile')" draggable="false" />
+        </NuxtLink>
+        <LangToggle />
       </nav>
     </header>
     <main class="layout-main">
@@ -27,7 +21,9 @@
 
 <script setup lang="ts">
 import { useI18n } from "~/composables/useI18n";
-const { t, locale, setLocale } = useI18n();
+import LangToggle from "~/components/ui/LangToggle.vue";
+
+const { t } = useI18n();
 </script>
 
 <style scoped>
@@ -80,12 +76,23 @@ const { t, locale, setLocale } = useI18n();
   color: var(--text-main);
 }
 
-.lang-select {
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--text-main);
-  padding: 4px 8px;
+.profile-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-link img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(2px 3px 6px rgba(0, 0, 0, 0.7));
+  transition: transform 0.15s ease;
+}
+
+.profile-link:hover img {
+  transform: scale(1.08);
 }
 
 .layout-main {
