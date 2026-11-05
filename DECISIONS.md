@@ -2,7 +2,7 @@
 
 **Version :** 1.0  
 **Statut :** Référence des décisions du projet  
-**Dernière mise à jour :** 31 octobre 2026
+**Dernière mise à jour :** 3 novembre 2026
 
 ---
 
@@ -202,6 +202,12 @@ Ces valeurs sont les paramètres de référence du GDD, à confirmer par les tes
 | D-132 | La logique de jeu est indépendante de Three.js.                           | ACCEPTED |
 | D-133 | Les calculs de gameplay sont exécutés côté serveur.                       | ACCEPTED |
 | D-134 | Les actions secrètes ne sont jamais incluses dans l'état Colyseus public. | ACCEPTED |
+
+## 5.4 Licence et projet
+
+| ID    | Décision                                                       | Statut   |
+| ----- | -------------------------------------------------------------- | -------- |
+| D-190 | Le code source de HEX DUEL est sous licence GNU AGPL-3.0-only. | ACCEPTED |
 
 ---
 

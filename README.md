@@ -50,3 +50,9 @@ pnpm test:e2e         # exécuter les tests Playwright
 - `docs/UI_UX_SPEC.md` — spécification UI/UX
 - `DECISIONS.md` — registre des décisions du projet
 - `AGENTS.md` — règles de contribution
+
+## License
+
+Ce projet est sous licence [GNU Affero General Public License v3.0 (AGPL-3.0)](https://www.gnu.org/licenses/agpl-3.0.html).
+
+Le texte intégral de la licence est disponible dans le fichier [LICENSE](./LICENSE).

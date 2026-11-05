@@ -1,6 +1,7 @@
 {
   "name": "hex-duel",
   "private": true,
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "pnpm --parallel --filter @hex-duel/web --filter @hex-duel/server dev",
