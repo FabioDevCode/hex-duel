@@ -45,14 +45,16 @@
           </div>
         </div>
       </div>
-      <div v-else-if="waitingForOpponent" class="result-overlay panel">
-        <p class="text-secondary">{{ t("room.waiting") }}</p>
-        <p class="invite-code">{{ privateCode }}</p>
-        <div class="result-actions">
-          <button class="btn" @click="copyCode">
-            {{ codeCopied ? t("room.copied") : t("room.copy") }}
-          </button>
-          <button class="btn" @click="cancelPrivateRoom">{{ t("matchmaking.cancel") }}</button>
+      <div v-else-if="waitingForOpponent" class="result-backdrop">
+        <div class="result-modal panel">
+          <p class="text-secondary">{{ t("room.waiting") }}</p>
+          <p class="invite-code">{{ privateCode }}</p>
+          <div class="result-actions">
+            <button class="btn btn-primary" @click="copyCode">
+              {{ codeCopied ? t("room.copied") : t("room.copy") }}
+            </button>
+            <button class="btn" @click="cancelPrivateRoom">{{ t("matchmaking.cancel") }}</button>
+          </div>
         </div>
       </div>
     </ClientOnly>
@@ -493,26 +495,6 @@ onBeforeUnmount(() => {
   width: 180px;
 }
 
-.result-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  z-index: 10;
-
-  background-color: #170E1A;
-  color: whitesmoke;
-
-  border: 3px solid transparent;
-  border-radius: 12px;
-  background:
-    linear-gradient(#111, #111) padding-box,
-    linear-gradient(135deg, #CB5901, #FD9909, #FD9909, #FD9909, #FCF069, #FD9909, #FD9909, #FD9909, #CB5901) border-box;
-}
 
 .result-title {
   font-size: 2.5rem;
