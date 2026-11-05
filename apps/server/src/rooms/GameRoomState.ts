@@ -4,6 +4,7 @@ export const PlayerSchema = schema(
   {
     seat: t.uint8().default(0),
     id: t.string().default(""),
+    pseudonym: t.string().default(""),
     x: t.number().default(0),
     z: t.number().default(0),
     crystals: t.uint8().default(0),

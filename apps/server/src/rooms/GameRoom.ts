@@ -4,6 +4,7 @@ import { Room, type Client } from "colyseus";
 import { GameService } from "../services/GameService";
 import { recordMatchResult } from "../services/ResultService";
 import { createGuestPlayer } from "../services/PlayerService";
+import { resolveJoinPseudonym } from "../services/PseudonymService";
 import { GameRoomState, PlayerSchema } from "./GameRoomState";
 
 const RECONNECTION_SECONDS = Math.ceil(GAME_CONFIG.reconnectGracePeriodMs / 1000);
@@ -53,7 +54,10 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     });
   }
 
-  override async onJoin(client: Client, options?: { sessionId?: string }): Promise<void> {
+  override async onJoin(
+    client: Client,
+    options?: { sessionId?: string; pseudo?: string },
+  ): Promise<void> {
     const seat: Seat = this.state.players.length === 0 ? 0 : 1;
     const guestPlayer = await createGuestPlayer();
     this.playerIds[seat] = guestPlayer.id;
@@ -61,6 +65,8 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
     const player = new PlayerSchema();
     player.seat = seat;
     player.id = client.sessionId;
+    // Public display data (D-134): validated server side, never an identity.
+    player.pseudonym = resolveJoinPseudonym(options?.pseudo);
     player.x = seat === 0 ? -6 : 6;
     player.z = 0;
     player.crystals = GAME_CONFIG.maxCrystals;
