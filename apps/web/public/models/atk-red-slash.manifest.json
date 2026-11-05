@@ -1,0 +1,41 @@
+{
+  "file": "atk-red-slash.glb",
+  "bytes": 29428588,
+  "generator": "pygltflib@v1.16.5",
+  "sceneNodes": 2,
+  "meshes": [
+    {
+      "name": "mesh_0",
+      "vertices": 168759,
+      "triangles": 301716,
+      "morphTargets": 0
+    }
+  ],
+  "materials": [
+    {
+      "name": "(unnamed)",
+      "type": "MeshStandardMaterial",
+      "vertexColors": false,
+      "skinning": false
+    }
+  ],
+  "bones": [],
+  "animations": [],
+  "boundingBox": {
+    "min": [
+      -0.907,
+      -0.063,
+      -0.951
+    ],
+    "max": [
+      0.914,
+      0.054,
+      0.94
+    ]
+  },
+  "size": [
+    1.821,
+    0.117,
+    1.891
+  ]
+}
