@@ -78,7 +78,10 @@ export const useGameRoom = () => {
         bindRoom(existing);
         return;
       }
-      const joined = (await getClient().joinById(roomId)) as SyncedGameRoom;
+      // The pseudonym travels with the join options: the server always
+      // re-validates it (D-083); it is display data, never an identity.
+      const { pseudonym } = usePseudonym();
+      const joined = (await getClient().joinById(roomId, { pseudo: pseudonym.value })) as SyncedGameRoom;
       room.value = joined;
       bindRoom(joined);
     } catch (error: unknown) {

@@ -51,6 +51,10 @@ const messages: Record<Locale, Record<string, string>> = {
     "profile.losses": "LOSSES",
     "profile.draws": "DRAWS",
     "profile.noData": "Play a match to see your statistics.",
+    "profile.pseudonym": "PSEUDONYM",
+    "profile.pseudonymSave": "SAVE",
+    "profile.pseudonymSaved": "Pseudonym saved!",
+    "profile.pseudonymInvalid": "3 to 24 characters: letters, digits, spaces, - and _ only.",
   },
   fr: {
     "nav.play": "Jouer",
@@ -99,6 +103,10 @@ const messages: Record<Locale, Record<string, string>> = {
     "profile.losses": "DÉFAITES",
     "profile.draws": "NULS",
     "profile.noData": "Jouez une partie pour voir vos statistiques.",
+    "profile.pseudonym": "PSEUDO",
+    "profile.pseudonymSave": "ENREGISTRER",
+    "profile.pseudonymSaved": "Pseudo enregistré !",
+    "profile.pseudonymInvalid": "3 à 24 caractères : lettres, chiffres, espaces, - et _ uniquement.",
   },
 };
 
