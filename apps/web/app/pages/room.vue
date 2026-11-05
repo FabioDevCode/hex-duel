@@ -17,7 +17,7 @@
 
       <hr class="separator">
 
-      <NuxtLink to="/" class="btn back-btn">
+      <NuxtLink to="/play" class="btn back-btn">
         {{ t("room.back") }}
       </NuxtLink>
 
@@ -94,21 +94,6 @@ const joinRoom = async (): Promise<void> => {
 
 .create-btn {
   padding: 26px 32px !important;
-}
-
-.back-btn {
-  padding: 14px 32px;
-  text-decoration: none;
-}
-
-.separator {
-  border: none;
-  height: 2px;
-  border-radius: 10px;
-  background-color: #170E1A;
-  background: linear-gradient(to right, transparent, black, transparent);
-  width: 100%;
-  margin: 20px auto;
 }
 
 .join-form {

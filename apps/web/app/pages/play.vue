@@ -9,6 +9,12 @@
       <h2>{{ t("play.privateRoom") }}</h2>
       <p class="text-secondary">{{ t("play.privateRoomDesc") }}</p>
     </NuxtLink>
+
+    <hr class="separator">
+
+    <NuxtLink to="/" class="btn back-btn">
+      {{ t("result.backToMenu") }}
+    </NuxtLink>
   </div>
 </template>
 
@@ -34,6 +40,10 @@ const { t } = useI18n();
   flex-direction: column;
   text-decoration: none;
   text-align: center;
+}
+
+.separator {
+  width: 320px;
 }
 
 .mode-card h2 {
