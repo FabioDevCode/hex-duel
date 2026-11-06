@@ -5,6 +5,12 @@
     <NuxtLink to="/play" class="btn play-btn golden-button">
       {{ t("home.play") }}
     </NuxtLink>
+    <button class="btn second-btn golden-button">
+      Comment jouer ?
+    </button>
+    <button class="btn second-btn golden-button">
+      Crédits
+    </button>
   </div>
 </template>
 
@@ -48,6 +54,17 @@ img {
   padding: 16px 64px;
   margin-top: 16px;
   border-radius: 12px;
+  width: 240px;
+  text-decoration: none;
+  corner-shape: bevel;
+}
+
+.second-btn {
+  font-size: 0.9rem;
+  padding: 18px 8px;
+  margin-top: 16px;
+  border-radius: 12px;
+  width: 240px;
   text-decoration: none;
   corner-shape: bevel;
 }
