@@ -1,0 +1,41 @@
+{
+  "file": "slash-red.glb",
+  "bytes": 40816748,
+  "generator": "Khronos glTF Blender I/O v4.4.55",
+  "sceneNodes": 2,
+  "meshes": [
+    {
+      "name": "output_unwrapped",
+      "vertices": 30002,
+      "triangles": 19996,
+      "morphTargets": 0
+    }
+  ],
+  "materials": [
+    {
+      "name": "BakedMaterial",
+      "type": "MeshStandardMaterial",
+      "vertexColors": false,
+      "skinning": false
+    }
+  ],
+  "bones": [],
+  "animations": [],
+  "boundingBox": {
+    "min": [
+      -0.907,
+      -0.063,
+      -0.951
+    ],
+    "max": [
+      0.914,
+      0.054,
+      0.94
+    ]
+  },
+  "size": [
+    1.821,
+    0.117,
+    1.891
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "file": "bonus-shield.glb",
+  "bytes": 10806216,
+  "generator": "Khronos glTF Blender I/O v4.4.55",
+  "sceneNodes": 2,
+  "meshes": [
+    {
+      "name": "output_unwrapped",
+      "vertices": 12165,
+      "triangles": 14086,
+      "morphTargets": 0
+    }
+  ],
+  "materials": [
+    {
+      "name": "BakedMaterial",
+      "type": "MeshStandardMaterial",
+      "vertexColors": false,
+      "skinning": false
+    }
+  ],
+  "bones": [],
+  "animations": [],
+  "boundingBox": {
+    "min": [
+      -0.787,
+      -0.952,
+      -0.08
+    ],
+    "max": [
+      0.786,
+      0.95,
+      0.08
+    ]
+  },
+  "size": [
+    1.574,
+    1.902,
+    0.16
+  ]
+}

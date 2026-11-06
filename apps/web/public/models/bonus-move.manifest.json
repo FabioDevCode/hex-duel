@@ -1,0 +1,41 @@
+{
+  "file": "bonus-move.glb",
+  "bytes": 12284924,
+  "generator": "Khronos glTF Blender I/O v4.4.55",
+  "sceneNodes": 2,
+  "meshes": [
+    {
+      "name": "output_unwrapped",
+      "vertices": 13355,
+      "triangles": 15075,
+      "morphTargets": 0
+    }
+  ],
+  "materials": [
+    {
+      "name": "BakedMaterial",
+      "type": "MeshStandardMaterial",
+      "vertexColors": false,
+      "skinning": false
+    }
+  ],
+  "bones": [],
+  "animations": [],
+  "boundingBox": {
+    "min": [
+      -0.951,
+      -0.869,
+      -0.213
+    ],
+    "max": [
+      0.95,
+      0.854,
+      0.212
+    ]
+  },
+  "size": [
+    1.901,
+    1.723,
+    0.425
+  ]
+}

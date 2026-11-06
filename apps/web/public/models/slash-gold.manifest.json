@@ -1,0 +1,41 @@
+{
+  "file": "slash-gold.glb",
+  "bytes": 14713240,
+  "generator": "Khronos glTF Blender I/O v4.4.55",
+  "sceneNodes": 2,
+  "meshes": [
+    {
+      "name": "output_unwrapped",
+      "vertices": 22558,
+      "triangles": 20526,
+      "morphTargets": 0
+    }
+  ],
+  "materials": [
+    {
+      "name": "BakedMaterial",
+      "type": "MeshStandardMaterial",
+      "vertexColors": false,
+      "skinning": false
+    }
+  ],
+  "bones": [],
+  "animations": [],
+  "boundingBox": {
+    "min": [
+      -0.496,
+      -0.952,
+      -0.092
+    ],
+    "max": [
+      0.494,
+      0.951,
+      0.09
+    ]
+  },
+  "size": [
+    0.99,
+    1.903,
+    0.182
+  ]
+}
