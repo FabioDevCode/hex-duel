@@ -534,7 +534,7 @@ const KNOCK_LEAD_MS = 450;
 //   (when the knockdown starts) and closes in very fast.
 const SLASH_YAW_OFFSET: Record<AttackType, number> = { STRIKE: (2 * Math.PI) / 3, SNIPER: Math.PI / 2 };
 const SLASH_TIMING: Record<AttackType, { delay: number; grow: number; fade: number }> = {
-  STRIKE: { delay: 0, grow: 550, fade: ATTACK_ANIM_MS - 550 },
+  STRIKE: { delay: 350, grow: 550, fade: ATTACK_ANIM_MS - 550 },
   SNIPER: { delay: 850, grow: 350, fade: 250 },
 };
 const KNOCKDOWN_MS = 900;
