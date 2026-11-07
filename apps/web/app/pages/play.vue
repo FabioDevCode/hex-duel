@@ -10,7 +10,7 @@
       <p class="text-secondary">{{ t("play.privateRoomDesc") }}</p>
     </NuxtLink>
 
-    <hr class="separator">
+    <!-- <hr class="separator"> -->
 
     <NuxtLink to="/" class="btn back-btn">
       {{ t("result.backToMenu") }}
@@ -53,7 +53,7 @@ const { t } = useI18n();
 
 .mode-card p {
   text-transform: lowercase;
-  font-weight: 400;
+  font-weight: 600;
   word-break: normal;
   font-size: 0.8em;
   color: #CB5901;

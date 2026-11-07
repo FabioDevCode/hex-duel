@@ -17,43 +17,6 @@
   position: relative;
 }
 
-.layout-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  background-color: transparent;
-}
-
-.logo {
-  color: var(--accent);
-  font-weight: 800;
-  font-size: 1.25rem;
-  letter-spacing: 0.12em;
-  text-decoration: none;
-}
-
-.logo img {
-  height: 40px;
-}
-
-.nav-link {
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-size: 0.95rem;
-}
-
-.nav-link:hover,
-.nav-link.router-link-active {
-  color: var(--text-main);
-}
-
-
 .layout-main {
   flex: 1;
   display: flex;

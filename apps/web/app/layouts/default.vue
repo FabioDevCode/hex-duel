@@ -41,8 +41,9 @@ const { t } = useI18n();
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
   background-color: transparent;
+  padding: 12px 16px;
+  height: 80px;
 }
 
 .logo {
