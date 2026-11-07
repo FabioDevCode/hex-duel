@@ -33,7 +33,7 @@ import { GAME_CONFIG } from "@hex-duel/shared";
 import { buildArenaBounds, isInsideArena } from "@hex-duel/game-logic";
 import { CHARACTER_CLIPS, loadCharacterModel } from "./characterModels";
 import { attachWeaponAndGrip, loadWeaponModel } from "./characterWeapon";
-import { SlashEffect, loadSlashModel, preloadSlashModels } from "./slashEffect";
+import { SLASH_SPAWN, SlashEffect, loadSlashModel, preloadSlashModels } from "./slashEffect";
 import { CharacterAnimator } from "./characterAnimator";
 import { createArenaLighting, enableCharacterShadows } from "./arenaLighting";
 import type { ArenaLighting } from "./arenaLighting";
@@ -657,7 +657,9 @@ const startNextStep = (): void => {
         toTarget.y = 0;
         travel = Math.min(range * 1.3, Math.max(1, toTarget.length()));
       }
-      const to = from.clone().add(dir.multiplyScalar(travel));
+      const to = from.clone().add(dir.clone().multiplyScalar(travel));
+      // SNIPER: the charge disc spawns tiny, in front of the attacker.
+      from.add(dir.clone().multiplyScalar(SLASH_SPAWN[next.type].forward));
       void loadSlashModel(next.type).then((model) => {
         const active = activeStep.value;
         if (active?.kind !== "attack" || active.seat !== next.seat || active.slash) return;

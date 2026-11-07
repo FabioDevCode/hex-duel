@@ -23,6 +23,14 @@ const SLASH_SCALE = 2.4;
 // Vertical placement: ground ring just above the floor, disc at mid-height.
 const SLASH_Y: Record<AttackType, number> = { STRIKE: 0.15, SNIPER: 2.2 };
 
+// Spawn profile per type: initial scale fraction (of the full size) and
+// forward offset from the attacker (the SNIPER charge disc hovers tiny,
+// almost invisible, just in front of the character - not centered on it).
+export const SLASH_SPAWN: Record<AttackType, { scale: number; forward: number }> = {
+  STRIKE: { scale: 0.12, forward: 0 },
+  SNIPER: { scale: 0.035, forward: 0.9 },
+};
+
 const ENERGY_COLORS: Record<AttackType, { core: string; edge: string }> = {
   STRIKE: { core: "#ffd9c8", edge: "#ff3b30" },
   SNIPER: { core: "#fff6c9", edge: "#ffc531" },
@@ -140,6 +148,7 @@ export class SlashEffect {
   private readonly growMs: number;
   private readonly fadeMs: number;
   private readonly baseScale: number;
+  private readonly spawnScale: number;
   private disposed = false;
 
   constructor(
@@ -154,6 +163,7 @@ export class SlashEffect {
     growMs: number,
     fadeMs: number,
   ) {
+    this.spawnScale = SLASH_SPAWN[type].scale;
     this.scene = scene;
     this.from = from.clone();
     this.to = to.clone();
@@ -169,7 +179,7 @@ export class SlashEffect {
     const source = findMesh(model);
     if (!source) throw new Error(`Slash model for ${type} has no mesh`);
     this.mesh = new Mesh(source.geometry, this.material);
-    this.mesh.scale.setScalar(this.baseScale * 0.12);
+    this.mesh.scale.setScalar(this.baseScale * this.spawnScale);
     this.mesh.position.copy(this.from);
     this.mesh.rotation.y = yaw;
     this.mesh.renderOrder = 5;
@@ -185,7 +195,9 @@ export class SlashEffect {
     const growT = Math.min(1, Math.max(0, growElapsed / this.growMs));
     const eased = growT * growT * (3 - 2 * growT);
     this.mesh.position.lerpVectors(this.from, this.to, eased);
-    this.mesh.scale.setScalar(this.baseScale * (0.12 + 0.88 * eased));
+    this.mesh.scale.setScalar(
+      this.baseScale * (this.spawnScale + (1 - this.spawnScale) * eased),
+    );
     // Phase 2: fade out after arrival.
     const fadeElapsed = growElapsed - this.growMs;
     const fadeT = this.fadeMs > 0 ? Math.min(1, Math.max(0, fadeElapsed / this.fadeMs)) : 1;
