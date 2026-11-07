@@ -5,7 +5,7 @@ import { GameService } from "../services/GameService";
 import { recordMatchResult } from "../services/ResultService";
 import { createGuestPlayer } from "../services/PlayerService";
 import { resolveJoinPseudonym } from "../services/PseudonymService";
-import { GameRoomState, PlayerSchema } from "./GameRoomState";
+import { GameRoomState, GroundBonusSchema, PlayerSchema } from "./GameRoomState";
 
 const RECONNECTION_SECONDS = Math.ceil(GAME_CONFIG.reconnectGracePeriodMs / 1000);
 
@@ -151,6 +151,11 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
   }
 
   private startTurn(): void {
+    // The bonus system starts with the game: one server-side seed per match,
+    // never exposed to the clients (D-197).
+    if (this.state.turnNumber === 0) {
+      this.game.startBonusSystem((Math.random() * 0x7fffffff) | 0);
+    }
     this.state.turnNumber += 1;
     this.state.status = "SELECTING";
     this.state.turnDeadlineAt = Date.now() + GAME_CONFIG.turnDurationMs;
@@ -187,6 +192,22 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
         synced.z = resolved.position.z;
         synced.crystals = resolved.crystals;
         synced.isAlive = resolved.isAlive;
+        synced.armedBonus = resolution.bonuses?.armed[i] ?? "";
+      }
+    }
+
+    // Public bonus state (D-134): ground bonuses + per-turn events.
+    const bonuses = this.state.bonuses;
+    bonuses.length = 0;
+    if (resolution.bonuses) {
+      for (const ground of resolution.bonuses.ground) {
+        const syncedBonus = new GroundBonusSchema();
+        syncedBonus.id = ground.id;
+        syncedBonus.type = ground.type;
+        syncedBonus.x = ground.position.x;
+        syncedBonus.z = ground.position.z;
+        syncedBonus.spawnTurn = ground.spawnTurn;
+        bonuses.push(syncedBonus);
       }
     }
 
@@ -194,6 +215,7 @@ export class GameRoom extends Room<{ state: GameRoomState }> {
       turnNumber: resolution.turnNumber,
       players: resolution.players,
       attacks: resolution.attacks,
+      bonusEvents: resolution.bonuses?.events ?? null,
     });
 
     if (resolution.finished && resolution.winner) {

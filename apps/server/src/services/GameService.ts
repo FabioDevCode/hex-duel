@@ -1,7 +1,7 @@
-import { GAME_CONFIG, isAttackAction } from "@hex-duel/shared";
-import type { PlayerAction, PlayerState, Seat } from "@hex-duel/shared";
+import { BONUS_CONFIG, GAME_CONFIG, isAttackAction } from "@hex-duel/shared";
+import type { BonusType, GroundBonus, PlayerAction, PlayerState, Seat } from "@hex-duel/shared";
 import { resolveTurn } from "@hex-duel/game-logic";
-import type { TurnResolution, ValidationOrder } from "@hex-duel/game-logic";
+import type { BonusContext, TurnResolution, ValidationOrder } from "@hex-duel/game-logic";
 
 export type SubmitResult =
   | { ok: true; order: number }
@@ -15,6 +15,10 @@ export class GameService {
   private readonly players: [PlayerState, PlayerState];
   private readonly submitted = new Map<Seat, { action: PlayerAction; order: number }>();
   private orderCounter = 0;
+  // Bonus system (D-191..D-199): server-side seed, never sent to clients.
+  private bonusSeed: number | null = null;
+  private ground: GroundBonus[] = [];
+  private armed: [BonusType | null, BonusType | null] = [null, null];
 
   constructor(playerIds: Readonly<Record<Seat, string>>) {
     this.players = [
@@ -39,6 +43,27 @@ export class GameService {
 
   getPlayers(): readonly [PlayerState, PlayerState] {
     return this.players;
+  }
+
+  /** Starts the bonus system with a server-generated seed (D-197). */
+  startBonusSystem(seed: number): void {
+    this.bonusSeed = seed;
+    this.ground = [];
+    this.armed = [null, null];
+  }
+
+  getGroundBonuses(): readonly GroundBonus[] {
+    return this.ground;
+  }
+
+  getArmedBonuses(): readonly [BonusType | null, BonusType | null] {
+    return this.armed;
+  }
+
+  private bonusContext(): BonusContext | undefined {
+    return this.bonusSeed === null
+      ? undefined
+      : { seed: this.bonusSeed, ground: this.ground, armed: this.armed };
   }
 
   hasValidated(seat: Seat): boolean {
@@ -71,9 +96,12 @@ export class GameService {
       const dz = action.target.z - from.z;
       const distance = Math.sqrt(dx * dx + dz * dz);
       const EPSILON = 1e-9;
+      // A MOVE bonus armed by this player boosts the clamp range (5 -> 7).
+      const maxDistance =
+        this.armed[seat] === "MOVE" ? BONUS_CONFIG.boosted.moveDistance : GAME_CONFIG.maxMoveDistance;
       let target = action.target;
-      if (distance > GAME_CONFIG.maxMoveDistance + EPSILON) {
-        const scale = GAME_CONFIG.maxMoveDistance / distance;
+      if (distance > maxDistance + EPSILON) {
+        const scale = maxDistance / distance;
         target = { x: from.x + dx * scale, z: from.z + dz * scale };
       }
       action = { ...action, target };
@@ -108,9 +136,13 @@ export class GameService {
       0: this.submitted.get(0)?.order ?? 0,
       1: this.submitted.get(1)?.order ?? 0,
     };
-    const resolution = resolveTurn(this.players, actions, orders, turnNumber);
+    const resolution = resolveTurn(this.players, actions, orders, turnNumber, this.bonusContext());
     this.players[0] = resolution.players[0];
     this.players[1] = resolution.players[1];
+    if (resolution.bonuses) {
+      this.ground = resolution.bonuses.ground;
+      this.armed = resolution.bonuses.armed;
+    }
     this.submitted.clear();
     this.orderCounter = 0;
     return resolution;
