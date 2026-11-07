@@ -124,10 +124,10 @@ const findMesh = (root: Object3D): Mesh | null => {
 };
 
 /**
- * A single slash instance. Spawn: tiny (12%) near the attacker. Growth:
- * scales up and travels toward the target point over growMs. Fade: the
- * opacity ramps down over fadeMs once arrived. update() must be called
- * every frame with the current timestamp (ms).
+ * A single slash instance. Spawn: tiny (12%) near the attacker, held there
+ * for delayMs. Growth: scales up and travels toward the target point over
+ * growMs (after the delay). Fade: the opacity ramps down over fadeMs once
+ * arrived. update() must be called every frame with the timestamp (ms).
  */
 export class SlashEffect {
   private readonly mesh: Mesh;
@@ -136,6 +136,7 @@ export class SlashEffect {
   private readonly from: Vector3;
   private readonly to: Vector3;
   private readonly startAt: number;
+  private readonly delayMs: number;
   private readonly growMs: number;
   private readonly fadeMs: number;
   private readonly baseScale: number;
@@ -149,6 +150,7 @@ export class SlashEffect {
     to: Vector3,
     yaw: number,
     startAt: number,
+    delayMs: number,
     growMs: number,
     fadeMs: number,
   ) {
@@ -159,6 +161,7 @@ export class SlashEffect {
     this.from.y = SLASH_Y[type];
     this.to.y = SLASH_Y[type];
     this.startAt = startAt;
+    this.delayMs = delayMs;
     this.growMs = growMs;
     this.fadeMs = fadeMs;
     this.baseScale = SLASH_SCALE;
@@ -176,13 +179,15 @@ export class SlashEffect {
   update(now: number): void {
     if (this.disposed) return;
     const elapsed = now - this.startAt;
-    // Phase 1: grow + travel toward the target (smoothstep).
-    const growT = Math.min(1, elapsed / this.growMs);
+    // Phase 1: hold tiny at the attacker during the delay, then grow and
+    // travel toward the target (smoothstep).
+    const growElapsed = elapsed - this.delayMs;
+    const growT = Math.min(1, Math.max(0, growElapsed / this.growMs));
     const eased = growT * growT * (3 - 2 * growT);
     this.mesh.position.lerpVectors(this.from, this.to, eased);
     this.mesh.scale.setScalar(this.baseScale * (0.12 + 0.88 * eased));
     // Phase 2: fade out after arrival.
-    const fadeElapsed = elapsed - this.growMs;
+    const fadeElapsed = growElapsed - this.growMs;
     const fadeT = this.fadeMs > 0 ? Math.min(1, Math.max(0, fadeElapsed / this.fadeMs)) : 1;
     this.material.uniforms.uTime!.value = now / 1000;
     this.material.uniforms.uOpacity!.value = 1 - fadeT;

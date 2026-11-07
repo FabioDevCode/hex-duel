@@ -524,6 +524,19 @@ const ATTACK_ANIM_MS = 1500;
 // Hit reaction on the target: the knockdown starts a few ms before the
 // attack clip ends, then the target gets back up.
 const KNOCK_LEAD_MS = 450;
+
+// Energy slash staging per attack type.
+// - STRIKE (red ground ring): the model is a "C" ring open around -60deg
+//   in local space (measured), so the rounded front sits at +120deg; the
+//   yaw offset aligns that front with the travel direction. It launches
+//   immediately and grows fast.
+// - SNIPER (gold disc): launches almost at the end of the long attack
+//   (when the knockdown starts) and closes in very fast.
+const SLASH_YAW_OFFSET: Record<AttackType, number> = { STRIKE: (2 * Math.PI) / 3, SNIPER: Math.PI / 2 };
+const SLASH_TIMING: Record<AttackType, { delay: number; grow: number; fade: number }> = {
+  STRIKE: { delay: 0, grow: 550, fade: ATTACK_ANIM_MS - 550 },
+  SNIPER: { delay: ATTACK_ANIM_MS - KNOCK_LEAD_MS, grow: 350, fade: 250 },
+};
 const KNOCKDOWN_MS = 900;
 const ARISE_MS = 800;
 
@@ -717,8 +730,9 @@ const stepResolution = (): void => {
         }
       });
       // Energy slash: spawns tiny near the attacker and grows toward the
-      // opponent (or up to the attack range on a miss), arriving when the
-      // knockdown starts, then fading over the rest of the attack.
+      // opponent (or up to the attack range on a miss); per-type staging
+      // (see SLASH_TIMING) then fades out. On a miss it travels the full
+      // attack range along the chosen direction.
       if (scene) {
         const from = group.position.clone();
         const dirRad = degToRad(nextDirection(step));
@@ -735,16 +749,18 @@ const stepResolution = (): void => {
         void loadSlashModel(step.type).then((model) => {
           const active = activeStep.value;
           if (active?.kind !== "attack" || active.seat !== step.seat || active.slash) return;
+          const timing = SLASH_TIMING[step.type];
           active.slash = new SlashEffect(
             scene!,
             step.type,
             model,
             from,
             to,
-            -dirRad + Math.PI / 2,
+            SLASH_YAW_OFFSET[step.type] - dirRad,
             performance.now(),
-            ATTACK_ANIM_MS - KNOCK_LEAD_MS,
-            KNOCK_LEAD_MS,
+            timing.delay,
+            timing.grow,
+            timing.fade,
           );
         });
       }
