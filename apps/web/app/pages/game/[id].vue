@@ -9,6 +9,7 @@
         :aim-locked="aimLocked"
         :my-seat="mySeat ?? 0"
         :resolution="resolution"
+        :interrupt="interruptResolution"
         @move-target="onMoveTarget"
         @attack-direction="onAttackDirection"
         @aim-locked-change="onAimLockedChange"
@@ -89,6 +90,10 @@ type ResolutionStep =
   | { kind: "attack"; seat: 0 | 1; type: AttackType; direction: number; hit: boolean };
 
 const resolution = ref<{ steps: ResolutionStep[] } | null>(null);
+// True when the current resolution is the fatal one (a player lost their
+// last crystal): the remaining steps are cancelled, nothing animates
+// behind the victory/defeat overlay.
+const interruptResolution = ref(false);
 // Crystals displayed in the HUD: during the resolution animation the
 // server state is already patched, so we hold the pre-attack values and
 // only let a crystal break when the attack animation actually lands.
@@ -413,6 +418,9 @@ const bindMessages = (): void => {
       }
       return null;
     };
+    interruptResolution.value = message.players.some(
+      (player) => !player.isAlive || player.crystals <= 0,
+    );
     resolution.value = {
       steps: buildResolutionSteps(moveStep, revealedEntries.value, message.attacks),
     };

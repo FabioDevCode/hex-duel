@@ -50,6 +50,9 @@ const props = defineProps<{
       | { kind: "attack"; seat: 0 | 1; type: AttackType; direction: number; hit: boolean }
     )[];
   } | null;
+  /** A player just lost their last crystal: the remaining resolution
+   * steps are cancelled so nothing animates behind the result overlay. */
+  interrupt: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -546,6 +549,21 @@ const KNOCKDOWN_MS = 900;
 const ARISE_MS = 800;
 
 const queuedSteps = ref<ResolutionStep[]>([]);
+
+// Game-ending resolution: drop every step that would play after the fatal
+// blow. The current step finishes cleanly (knockdown, get-up, face-off),
+// then the queue drains and the scene stays still until the overlay.
+watch(
+  () => props.interrupt,
+  (interrupt) => {
+    if (!interrupt) return;
+    queuedSteps.value = [];
+    if (!activeStep.value) {
+      // Nothing was playing: release the held crystals right away.
+      emit("resolutionEnd");
+    }
+  },
+);
 const activeStep = ref<ActiveStep | null>(null);
 
 const playResolution = (): void => {
