@@ -1,3 +1,4 @@
+import { GAME_CONFIG } from "@hex-duel/shared";
 import type { PlayerAction, PlayerState, Vector2 } from "@hex-duel/shared";
 import { calculateMovement, type MovementError } from "./calculateMovement";
 
@@ -10,13 +11,15 @@ export const resolveMovement = (
   actions: readonly [PlayerAction, PlayerAction],
   isInsideArena: (position: Vector2) => boolean,
   positionsOverlap: (a: Vector2, b: Vector2) => boolean,
+  maxDistances?: readonly [number, number],
 ): MovementOutcome => {
   const finalPositions: [Vector2, Vector2] = [players[0].position, players[1].position];
 
   for (const seat of [0, 1] as const) {
     const action = actions[seat];
     if (action.type === "MOVE") {
-      const result = calculateMovement(players[seat].position, action.target, isInsideArena);
+      const maxDistance = maxDistances?.[seat] ?? GAME_CONFIG.maxMoveDistance;
+      const result = calculateMovement(players[seat].position, action.target, isInsideArena, maxDistance);
       if (!result.ok) {
         return { moved: false, reason: result.error };
       }

@@ -10,6 +10,8 @@ export type AttackOutcome = {
   crystalsLost: number;
   targetCrystalsAfter: number;
   targetAlive: boolean;
+  /** True when the target's armed shield absorbed the hit (D-192). */
+  absorbedByShield: boolean;
 };
 
 /**
@@ -21,10 +23,17 @@ export const calculateDamage = (
   target: PlayerState,
   attackType: AttackType,
   direction: number,
+  options?: {
+    /** Boosted range/angle (armed ATTACK bonus), defaults to the base config. */
+    attackParams?: { range: number; angle: number };
+    /** The target carries an armed shield: the hit is absorbed. */
+    shielded?: boolean;
+  },
 ): AttackOutcome => {
-  const params = GAME_CONFIG.attacks[attackType];
+  const params = options?.attackParams ?? GAME_CONFIG.attacks[attackType];
   const check = checkAttack(attacker.position, target.position, { type: attackType, direction }, params);
-  const crystalsLost = check.hits ? 1 : 0;
+  const absorbedByShield = check.hits && options?.shielded === true;
+  const crystalsLost = check.hits && !absorbedByShield ? 1 : 0;
   const targetCrystalsAfter = Math.max(0, target.crystals - crystalsLost);
   return {
     attackerSeat: attacker.seat,
@@ -34,5 +43,6 @@ export const calculateDamage = (
     crystalsLost,
     targetCrystalsAfter,
     targetAlive: targetCrystalsAfter > 0,
+    absorbedByShield,
   };
 };

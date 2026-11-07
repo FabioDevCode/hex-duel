@@ -10,22 +10,23 @@ export type MovementResult =
   | { ok: true; destination: Vector2 }
   | { ok: false; error: MovementError };
 
-export const isWithinMaxDistance = (from: Vector2, to: Vector2): boolean => {
+export const isWithinMaxDistance = (from: Vector2, to: Vector2, maxDistance: number = GAME_CONFIG.maxMoveDistance): boolean => {
   const dx = to.x - from.x;
   const dz = to.z - from.z;
   const EPSILON = 1e-9;
-  return Math.sqrt(dx * dx + dz * dz) <= GAME_CONFIG.maxMoveDistance + EPSILON;
+  return Math.sqrt(dx * dx + dz * dz) <= maxDistance + EPSILON;
 };
 
 export const calculateMovement = (
   from: Vector2,
   target: Vector2,
   isInsideArena: (position: Vector2) => boolean,
+  maxDistance: number = GAME_CONFIG.maxMoveDistance,
 ): MovementResult => {
   if (!Number.isFinite(target.x) || !Number.isFinite(target.z)) {
     return { ok: false, error: "INVALID_TARGET" };
   }
-  if (!isWithinMaxDistance(from, target)) {
+  if (!isWithinMaxDistance(from, target, maxDistance)) {
     return { ok: false, error: "TOO_FAR" };
   }
   if (!isInsideArena(target)) {
