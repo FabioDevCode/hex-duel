@@ -263,6 +263,9 @@ const finish = (
       for (const seat of [0, 1] as const) {
         const player = players[seat];
         if (!player.isAlive) continue;
+        // A crystal (REGEN) does nothing at full crystals: it is not
+        // picked up and stays on the ground.
+        if (bonusItem.type === "REGEN" && player.crystals >= GAME_CONFIG.maxCrystals) continue;
         const action = actions[seat];
         const attackType = attackParamsUsed[seat];
         const params =

@@ -39,11 +39,25 @@ export const generateBonusSchedule = (seed: number): ScheduledSpawn[] => {
   const turns = [firstTurn, ...remainingTurns].sort((a, b) => a - b);
   const types = shuffle(rng, pool);
 
-  return turns.map((turn, index) => ({
+  const schedule = turns.map((turn, index) => ({
     id: `bonus-${turn}-${index}`,
     type: types[index]!,
     turn,
   }));
+
+  // The first bonus to appear is never a crystal (REGEN): swap it
+  // deterministically with the first non-REGEN entry if needed.
+  if (schedule[0]?.type === "REGEN") {
+    const swapIndex = schedule.findIndex((spawn, index) => index > 0 && spawn.type !== "REGEN");
+    const swap = schedule[swapIndex];
+    if (swapIndex > 0 && swap) {
+      const first = schedule[0]!;
+      schedule[0] = { ...first, type: swap.type };
+      schedule[swapIndex] = { ...swap, type: first.type };
+    }
+  }
+
+  return schedule;
 };
 
 /**

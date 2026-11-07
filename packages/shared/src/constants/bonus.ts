@@ -19,9 +19,9 @@ export const BONUS_CONFIG = {
   /** Quantities drawn per game (inclusive ranges). */
   quantities: {
     REGEN: { min: 1, max: 2 },
-    ATTACK: { min: 3, max: 4 },
-    MOVE: { min: 3, max: 5 },
-    SHIELD: { min: 2, max: 2 },
+    ATTACK: { min: 4, max: 5 },
+    MOVE: { min: 4, max: 6 },
+    SHIELD: { min: 3, max: 3 },
   },
   /** Boosted values applied while the bonus is armed (one action). */
   boosted: {

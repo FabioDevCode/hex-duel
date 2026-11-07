@@ -52,19 +52,19 @@ describe("generateBonusSchedule", () => {
     expect(new Set(schedules).size).toBeGreaterThan(1);
   });
 
-  it("draws the documented quantities (total 9-13)", () => {
+  it("draws the documented quantities (total 12-16)", () => {
     for (const seed of [1, 42, 999, 31337]) {
       const schedule = generateBonusSchedule(seed);
       const count = (type: BonusType) => schedule.filter((s) => s.type === type).length;
       expect(count("REGEN")).toBeGreaterThanOrEqual(1);
       expect(count("REGEN")).toBeLessThanOrEqual(2);
-      expect(count("ATTACK")).toBeGreaterThanOrEqual(3);
-      expect(count("ATTACK")).toBeLessThanOrEqual(4);
-      expect(count("MOVE")).toBeGreaterThanOrEqual(3);
-      expect(count("MOVE")).toBeLessThanOrEqual(5);
-      expect(count("SHIELD")).toBe(2);
-      expect(schedule.length).toBeGreaterThanOrEqual(9);
-      expect(schedule.length).toBeLessThanOrEqual(13);
+      expect(count("ATTACK")).toBeGreaterThanOrEqual(4);
+      expect(count("ATTACK")).toBeLessThanOrEqual(5);
+      expect(count("MOVE")).toBeGreaterThanOrEqual(4);
+      expect(count("MOVE")).toBeLessThanOrEqual(6);
+      expect(count("SHIELD")).toBe(3);
+      expect(schedule.length).toBeGreaterThanOrEqual(12);
+      expect(schedule.length).toBeLessThanOrEqual(16);
     }
   });
 
@@ -76,6 +76,13 @@ describe("generateBonusSchedule", () => {
       expect(turns[0]).toBeGreaterThanOrEqual(BONUS_CONFIG.firstSpawnTurnMin);
       expect(turns[0]).toBeLessThanOrEqual(BONUS_CONFIG.firstSpawnTurnMax);
       expect(Math.max(...turns)).toBeLessThanOrEqual(BONUS_CONFIG.lastSpawnTurn);
+    }
+  });
+
+  it("never schedules a crystal (REGEN) as the first bonus", () => {
+    for (let seed = 1; seed <= 500; seed++) {
+      const schedule = generateBonusSchedule(seed);
+      expect(schedule[0]!.type).not.toBe("REGEN");
     }
   });
 });
@@ -335,6 +342,24 @@ describe("resolveTurn with bonuses", () => {
     expect(resolution.bonuses!.events.shieldAbsorbed).toEqual([{ seat: 1 }]);
     expect(resolution.bonuses!.events.consumed).toContainEqual({ seat: 1, type: "SHIELD" });
     expect(resolution.bonuses!.armed[1]).toBeNull();
+  });
+
+  it("does nothing when a full-crystals player touches a crystal bonus", () => {
+    const ground: GroundBonus[] = [
+      { id: "regen-full", type: "REGEN", position: { x: -1, z: 0 }, spawnTurn: 2 },
+    ];
+    const resolution = resolveTurn(
+      [player(0, -6, 0, 3), player(1, 6, 0)],
+      { 0: { type: "MOVE", target: { x: -1, z: 0 } }, 1: { type: "PASS" } },
+      orders,
+      2,
+      bonusContext(ground),
+    );
+    expect(resolution.bonuses!.events.pickups).toHaveLength(0);
+    expect(resolution.bonuses!.events.regen).toHaveLength(0);
+    expect(resolution.players[0].crystals).toBe(3);
+    // The bonus stays on the ground.
+    expect(resolution.bonuses!.ground.map((b) => b.id)).toEqual(["regen-full"]);
   });
 
   it("replaces the armed bonus on a new pickup (single slot, D-194)", () => {

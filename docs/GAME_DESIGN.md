@@ -569,7 +569,7 @@ Des bonus apparaissent sur l'arène pendant la partie. Le ramassage est automati
 
 | Bonus | Effet | Consommation |
 | ----- | ----- | ------------ |
-| Régénération | +1 cristal (maximum 3), effet IMMÉDIAT | Immédiate, n'occupe pas d'emplacement |
+| Régénération | +1 cristal (maximum 3), effet IMMÉDIAT — sans effet si le joueur a déjà tous ses cristaux (le bonus reste au sol) | Immédiate, n'occupe pas d'emplacement |
 | Boost de déplacement | Portée de déplacement 5 → 7 | Prochain déplacement |
 | Boost d'attaque | STRIKE 6/90° → 8/180°, SNIPER 10/10° → 12/25° | Prochaine attaque (une seule) |
 | Bouclier | Absorbe le prochain coup reçu | Prochain coup reçu |
@@ -591,9 +591,9 @@ Si les deux joueurs ramassent le même bonus au cours du même tour, personne ne
 ### 16.5 Apparition des bonus
 
 - Le serveur tire au sort un seed en début de partie ; le planning des apparitions est déterministe (même seed → même planning).
-- Quantités tirées au sort : régénération 1-2, boost d'attaque 3-4, boost de déplacement 3-5, bouclier 2 (total 9 à 13 par partie).
+- Quantités tirées au sort : régénération 1-2, boost d'attaque 4-5, boost de déplacement 4-6, bouclier 3 (total 12 à 16 par partie).
 - Un seul bonus apparaît par tour maximum.
-- Premier bonus au tour 2 ou 3 ; dernière apparition possible au tour 22.
+- Premier bonus au tour 2 ou 3 ; il ne peut jamais s'agir d'un bonus de régénération. Dernière apparition possible au tour 22.
 - Répartition aléatoire des tours dans cette fenêtre, sans deux apparitions le même tour.
 - La position est calculée au tour de l'apparition (même seed), avec équité spatiale vis-à-vis des positions des deux joueurs.
 

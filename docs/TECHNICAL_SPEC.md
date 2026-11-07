@@ -1276,7 +1276,7 @@ L'architecture technique est considérée comme correctement mise en place lorsq
 
 ## 21.1 Logique pure (packages/game-logic)
 
-- `src/bonus/bonusPlanning.ts` : générateur déterministe du planning. Un PRNG seedé (mulberry32) tire les quantités (régénération 1-2, attaque 3-4, déplacement 3-5, bouclier 2), puis les tours d'apparition (distincts, dans la fenêtre 2-22, un maximum par tour). Même seed → même planning.
+- `src/bonus/bonusPlanning.ts` : générateur déterministe du planning. Un PRNG seedé (mulberry32) tire les quantités (régénération 1-2, attaque 4-5, déplacement 4-6, bouclier 3), puis les tours d'apparition (distincts, dans la fenêtre 2-22, un maximum par tour ; le premier spawn n'est jamais une régénération). Même seed → même planning.
 - `src/bonus/resolveBonuses.ts` : spawn du tour (position équitable calculée au tour du spawn avec le même seed), expiration après 2 tours au sol, détection de ramassage (position finale, trajectoire — distance segment/point —, zone d'attaque), gestion de l'emplacement unique, de la régénération plafonnée à 3 cristaux, de l'absorption du bouclier et du double ramassage simultané.
 - `resolveTurn` accepte un contexte de bonus optionnel : sans contexte, le comportement est strictement identique à avant (aucun impact sur les parties sans bonus).
 
