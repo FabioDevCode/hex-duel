@@ -495,6 +495,11 @@ type ActiveStep =
       turnDurationMs: number;
       attackStarted: boolean;
       attackDone: boolean;
+      knockStarted: boolean;
+      knockDone: boolean;
+      hitLandedEmitted: boolean;
+      ariseStarted: boolean;
+      ariseDone: boolean;
       startedAt: number;
     };
 
@@ -502,6 +507,11 @@ const MOVE_DURATION_MS = 1500;
 // Attack animation length (clip time-scaled to fit); pivot + anim must
 // stay within the server's 4s resolution window.
 const ATTACK_ANIM_MS = 1500;
+// Hit reaction on the target: the knockdown starts a few ms before the
+// attack clip ends, then the target gets back up.
+const KNOCK_LEAD_MS = 250;
+const KNOCKDOWN_MS = 900;
+const ARISE_MS = 800;
 
 const queuedSteps = ref<ResolutionStep[]>([]);
 const activeStep = ref<ActiveStep | null>(null);
@@ -577,6 +587,11 @@ const startNextStep = (): void => {
       turnDurationMs,
       attackStarted: false,
       attackDone: false,
+      knockStarted: false,
+      knockDone: false,
+      hitLandedEmitted: false,
+      ariseStarted: false,
+      ariseDone: false,
       startedAt: performance.now(),
     };
   }
@@ -638,6 +653,7 @@ const stepResolution = (): void => {
     }
     // Phase 2: play the attack clip (time-scaled to ATTACK_ANIM_MS).
     group.rotation.y = step.turnToYaw;
+    const targetSeat = step.seat === 0 ? 1 : 0;
     if (!step.attackStarted) {
       step.attackStarted = true;
       const clip = ATTACK_CLIPS[step.seat][step.type];
@@ -647,10 +663,44 @@ const stepResolution = (): void => {
         }
       });
     }
+    // Phase 3: a few ms before the attack lands, the target starts
+    // falling ("Renverser" / Knock_Down).
+    const attackElapsed = elapsed - step.turnDurationMs;
+    if (step.hit && !step.knockStarted && attackElapsed >= ATTACK_ANIM_MS - KNOCK_LEAD_MS) {
+      step.knockStarted = true;
+      animators?.[targetSeat]?.playOnce("Knock_Down", KNOCKDOWN_MS, () => {
+        const active = activeStep.value;
+        if (active?.kind === "attack" && active.seat === step.seat) {
+          active.knockDone = true;
+        }
+      });
+    }
     if (step.attackDone) {
-      if (step.hit) emit("hitLanded", step.seat === 0 ? 1 : 0);
-      activeStep.value = null;
-      startNextStep();
+      // The attack landed: the target's crystal breaks now (once).
+      if (step.hit && !step.hitLandedEmitted) {
+        step.hitLandedEmitted = true;
+        emit("hitLanded", targetSeat);
+      }
+      if (!step.hit) {
+        activeStep.value = null;
+        startNextStep();
+        return;
+      }
+      // Phase 4: once knocked down, the target gets back up
+      // ("Se relever" / Arise), then the sequence continues.
+      if (step.knockDone && !step.ariseStarted) {
+        step.ariseStarted = true;
+        animators?.[targetSeat]?.playOnce("Arise", ARISE_MS, () => {
+          const active = activeStep.value;
+          if (active?.kind === "attack" && active.seat === step.seat) {
+            active.ariseDone = true;
+          }
+        });
+      }
+      if (step.ariseDone) {
+        activeStep.value = null;
+        startNextStep();
+      }
     }
   }
 };
