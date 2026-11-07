@@ -33,6 +33,7 @@ import { GAME_CONFIG } from "@hex-duel/shared";
 import { buildArenaBounds, isInsideArena } from "@hex-duel/game-logic";
 import { CHARACTER_CLIPS, loadCharacterModel } from "./characterModels";
 import { attachWeaponAndGrip, loadWeaponModel } from "./characterWeapon";
+import { SlashEffect, loadSlashModel, preloadSlashModels } from "./slashEffect";
 import { CharacterAnimator } from "./characterAnimator";
 import { createArenaLighting, enableCharacterShadows } from "./arenaLighting";
 import type { ArenaLighting } from "./arenaLighting";
@@ -178,6 +179,9 @@ const buildCapsules = (): void => {
   const mixers: [CharacterAnimator, CharacterAnimator] = [] as never;
   for (const seat of [0, 1] as const) {
     scene.add(groups[seat]);
+    // Energy slash VFX models, preloaded once for the session.
+    void preloadSlashModels();
+
     // GLB character (red samurai / blue knight), loaded asynchronously,
     // normalized to ~2x the previous character height, facing the opponent.
     // The animator starts the idle loop as soon as the model is loaded,
@@ -509,6 +513,7 @@ type ActiveStep =
       faceDurationMs: number;
       faceStarted: boolean;
       faceDone: boolean;
+      slash: SlashEffect | null;
       startedAt: number;
     };
 
@@ -551,6 +556,11 @@ const shortestAngle = (from: number, to: number): number => {
   if (delta < -Math.PI) delta += Math.PI * 2;
   return delta;
 };
+
+/** World direction (degrees) the active attack step was aimed at.
+ * The pivot yaw is PI/2 - dirRad - modelYawOffset, hence this inversion. */
+const nextDirection = (step: { kind: "attack"; turnToYaw: number; seat: 0 | 1 }): number =>
+  radToDeg(Math.PI / 2 - (step.turnToYaw + modelYawOffset(step.seat)));
 
 /** Yaw for a seat to face the opponent's current visual position. */
 const yawTowardOpponent = (seat: 0 | 1): number => {
@@ -620,6 +630,7 @@ const startNextStep = (): void => {
       faceDurationMs: 0,
       faceStarted: false,
       faceDone: false,
+      slash: null,
       startedAt: performance.now(),
     };
   }
@@ -705,7 +716,40 @@ const stepResolution = (): void => {
           activeStep.value.attackDone = true;
         }
       });
+      // Energy slash: spawns tiny near the attacker and grows toward the
+      // opponent (or up to the attack range on a miss), arriving when the
+      // knockdown starts, then fading over the rest of the attack.
+      if (scene) {
+        const from = group.position.clone();
+        const dirRad = degToRad(nextDirection(step));
+        const dir = new Vector3(Math.cos(dirRad), 0, Math.sin(dirRad));
+        const range = attackParams(step.type).range;
+        const targetGroup = capsules?.[step.seat === 0 ? 1 : 0];
+        let travel: number = range;
+        if (step.hit && targetGroup) {
+          const toTarget = targetGroup.position.clone().sub(group.position);
+          toTarget.y = 0;
+          travel = Math.min(range * 1.3, Math.max(1, toTarget.length()));
+        }
+        const to = from.clone().add(dir.multiplyScalar(travel));
+        void loadSlashModel(step.type).then((model) => {
+          const active = activeStep.value;
+          if (active?.kind !== "attack" || active.seat !== step.seat || active.slash) return;
+          active.slash = new SlashEffect(
+            scene!,
+            step.type,
+            model,
+            from,
+            to,
+            -dirRad + Math.PI / 2,
+            performance.now(),
+            ATTACK_ANIM_MS - KNOCK_LEAD_MS,
+            KNOCK_LEAD_MS,
+          );
+        });
+      }
     }
+    step.slash?.update(now);
     // Phase 3: a few ms before the attack lands, the target starts
     // falling ("Renverser" / Knock_Down, horizontally pinned).
     const attackElapsed = elapsed - step.turnDurationMs;
@@ -755,6 +799,7 @@ const stepResolution = (): void => {
     const faceEased = faceT * faceT * (3 - 2 * faceT);
     group.rotation.y = step.faceFromYaw + (step.faceToYaw - step.faceFromYaw) * faceEased;
     if (faceT >= 1) {
+      step.slash?.dispose();
       activeStep.value = null;
       startNextStep();
     }
