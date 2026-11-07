@@ -10,7 +10,7 @@
         :my-seat="mySeat ?? 0"
         :resolution="resolution"
         :interrupt="interruptResolution"
-        :bonuses="gameState?.bonuses ?? []"
+        :bonuses="displayedBonuses"
         :current-turn="gameState?.turnNumber ?? 0"
         :armed-bonus="gameState?.players?.[mySeat ?? 0]?.armedBonus ?? null"
         :pending-pickups="pendingPickups"
@@ -71,7 +71,7 @@
 
 <script setup lang="ts">
 import { GAME_CONFIG } from "@hex-duel/shared";
-import type { AttackType, BonusEvents, BonusType, PlayerAction, Vector2 } from "@hex-duel/shared";
+import type { AttackType, BonusEvents, BonusType, GroundBonus, PlayerAction, Vector2 } from "@hex-duel/shared";
 import GameCanvas from "~/components/game/GameCanvas.vue";
 import GameHUD from "~/components/game/GameHUD.vue";
 import type { SelectorAction } from "~/components/ui/ActionSelector.vue";
@@ -112,6 +112,11 @@ const armedHold = ref<[BonusType | null, BonusType | null]>([null, null]);
 const armedBeforeTurn = ref<[BonusType | null, BonusType | null]>([null, null]);
 /** True while the resolution plays: the armed icons are frozen. */
 const armedHoldActive = ref(false);
+// Ground bonuses held during the resolution: a bonus spawned by this
+// resolution only appears when the next turn begins (resolutionEnd),
+// never in the middle of the animations.
+const groundHold = ref<GroundBonus[] | null>(null);
+const groundBeforeTurn = ref<GroundBonus[]>([]);
 // Crystals displayed in the HUD: during the resolution animation the
 // server state is already patched, so we hold the pre-attack values and
 // only let a crystal break when the attack animation actually lands.
@@ -158,6 +163,12 @@ const cancelPrivateRoom = async (): Promise<void> => {
   router.push("/play");
 };
 
+// Ground bonuses as displayed: held during the resolution - the new
+// spawns appear only when the animations are over.
+const displayedBonuses = computed<GroundBonus[]>(() =>
+  groundHold.value ?? gameState.value?.bonuses ?? [],
+);
+
 // Players as displayed: crystals are held during the resolution animation
 // and released seat by seat when the attack animations land (or all at
 // once when the resolution ends).
@@ -198,6 +209,10 @@ const onResolutionEnd = (): void => {
   pendingPickups.value = [];
   // Release the armed icons: the pickups are now visible on screen.
   armedHoldActive.value = false;
+  // Release the ground bonuses: the new spawns appear now, at the start
+  // of the next turn.
+  groundHold.value = null;
+  groundBeforeTurn.value = gameState.value?.bonuses ?? [];
   const players = gameState.value?.players;
   armedBeforeTurn.value = [players?.[0]?.armedBonus ?? null, players?.[1]?.armedBonus ?? null];
 };
@@ -458,6 +473,7 @@ const bindMessages = (): void => {
     // icons must not change until the animation shows the pickup.
     armedHold.value = armedBeforeTurn.value;
     armedHoldActive.value = true;
+    groundHold.value = groundBeforeTurn.value;
     // Regeneration: the restored crystal displays as green (UI_UX 30.3);
     // a crystal loss clears the green marker if that crystal is gone.
     for (const regen of message.bonusEvents?.regen ?? []) {
