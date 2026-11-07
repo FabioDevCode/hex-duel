@@ -525,7 +525,7 @@ const ATTACK_ANIM_MS = 1500;
 // attack clip ends, then the target gets back up.
 // Per attack type: the STRIKE knockdown starts a bit earlier than the
 // SNIPER one (whose timing is already right for the long attack).
-const KNOCK_LEAD_MS: Record<AttackType, number> = { STRIKE: 600, SNIPER: 450 };
+const KNOCK_LEAD_MS: Record<AttackType, number> = { STRIKE: 850, SNIPER: 450 };
 
 // Energy slash staging per attack type.
 // - STRIKE (red ground ring): the model is a "C" ring open around -60deg
