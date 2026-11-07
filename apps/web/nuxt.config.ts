@@ -1,7 +1,16 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-01-01",
   devtools: { enabled: false },
-  css: ["~/assets/css/main.css"],
+  css: [
+    // Local variable fonts (no network dependency on Google Fonts):
+    // Cinzel 400-900, Alegreya 400-900 + italic. Fontsource emits one
+    // variable woff2 per subset with unicode-range, so the browser only
+    // downloads latin / latin-ext (French accents e è ê à ç oe).
+    "@fontsource-variable/cinzel",
+    "@fontsource-variable/alegreya",
+    "@fontsource-variable/alegreya/wght-italic.css",
+    "~/assets/css/main.css",
+  ],
   vite: {
     optimizeDeps: {
       include: [

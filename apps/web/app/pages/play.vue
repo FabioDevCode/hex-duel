@@ -67,7 +67,7 @@ const { t } = useI18n();
   align-items: center;
   gap: 4px;
   outline: none;
-  font-family: "Noto Sans", Verdana, sans-serif;
+  font-family: var(--font-title);
   max-width: 500px;
   min-width: 300px;
   font-size: 1em;

@@ -1,4 +1,7 @@
 :root {
+  /* Local variable fonts (Fontsource, font-display: swap) */
+  --font-title: 'Cinzel Variable', 'Cinzel', serif;
+  --font-body: 'Alegreya Variable', 'Alegreya', Georgia, serif;
   --bg-main: #170E1A;
   --bg-secondary: #191d26;
   --bg-panel: #222735;
@@ -28,13 +31,38 @@ html, body {
 body {
   background-color: var(--bg-main);
   color: var(--text-main);
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
   min-height: 100vh;
 }
 
+/* Page titles, button labels and menu UI use the title font. */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 700;
+}
+
 button {
-  font-family: inherit;
+  font-family: var(--font-title);
+  font-weight: 700;
   cursor: pointer;
+}
+
+/* Menu / navigation links (UI of the menus). */
+.nav-link, .layout-nav a {
+  font-family: var(--font-title);
+  font-weight: 700;
+}
+
+/* Body paragraphs (e.g. "Comment jouer" / "Crédits" pages): Alegreya 400.
+   Technical terms / emphasis: italic, weight 700. */
+.prose p {
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+
+.prose .tech-term {
+  font-style: italic;
+  font-weight: 700;
 }
 
 .panel {
@@ -107,7 +135,7 @@ button {
   align-items: center;
   outline: none;
   min-width: max-content;
-  font-family: "Noto Sans", Verdana, sans-serif;
+  font-family: var(--font-title);
   font-size: 1em;
   border: none;
   border-radius: 10px;
