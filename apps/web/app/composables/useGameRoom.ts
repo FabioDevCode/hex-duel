@@ -1,5 +1,5 @@
 import { Client, type Room } from "@colyseus/sdk";
-import type { Seat } from "@hex-duel/shared";
+import type { BonusType, GroundBonus, Seat } from "@hex-duel/shared";
 import { useState } from "nuxt/app";
 
 export type SyncedGameRoom = Room<unknown> & {
@@ -13,12 +13,20 @@ export type SyncedGameRoom = Room<unknown> & {
           seat: number;
           id: string;
           pseudonym?: string;
+          armedBonus?: string;
           x: number;
           z: number;
           crystals: number;
           isAlive: boolean;
           connected: boolean;
           hasValidated: boolean;
+        }[];
+        bonuses?: {
+          id: string;
+          type: string;
+          x: number;
+          z: number;
+          spawnTurn: number;
         }[];
       }
     | undefined;
@@ -31,12 +39,14 @@ export type PublicGameState = {
   players: {
     seat: Seat;
     pseudonym: string;
+    armedBonus: BonusType | null;
     x: number;
     z: number;
     crystals: number;
     isAlive: boolean;
     hasValidated: boolean;
   }[];
+  bonuses: GroundBonus[];
 };
 
 const toPublicState = (room: SyncedGameRoom): PublicGameState | null => {
@@ -51,11 +61,18 @@ const toPublicState = (room: SyncedGameRoom): PublicGameState | null => {
     players: state.players.map((p) => ({
       seat: (p.seat === 0 ? 0 : 1) as Seat,
       pseudonym: p.pseudonym ?? "",
+      armedBonus: (p.armedBonus || null) as BonusType | null,
       x: p.x,
       z: p.z,
       crystals: p.crystals,
       isAlive: p.isAlive,
       hasValidated: p.hasValidated,
+    })),
+    bonuses: (state.bonuses ?? []).map((b) => ({
+      id: b.id,
+      type: b.type as GroundBonus["type"],
+      position: { x: b.x, z: b.z },
+      spawnTurn: b.spawnTurn,
     })),
   };
 };

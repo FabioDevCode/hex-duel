@@ -8,6 +8,8 @@
         :name="seatName(0)"
         :seat="0"
         :crystals="players?.[0]?.crystals ?? 0"
+        :armed-bonus="players?.[0]?.armedBonus ?? null"
+        :regen-index="regenCrystalIndex?.[0] ?? null"
       />
       <div v-if="!finished" class="hud-center">
         <span class="turn">{{ t("game.turn", { turn: turnNumber, max: GAME_CONFIG.maxTurns }) }}</span>
@@ -18,6 +20,8 @@
         :name="seatName(1)"
         :seat="1"
         :crystals="players?.[1]?.crystals ?? 0"
+        :armed-bonus="players?.[1]?.armedBonus ?? null"
+        :regen-index="regenCrystalIndex?.[1] ?? null"
       />
     </div>
     <div class="hud-bottom panel" :class="(mySeat ?? 0) === 0 ? 'side-left' : 'side-right'">
@@ -69,7 +73,7 @@
 <script setup lang="ts">
 import { useI18n } from "~/composables/useI18n";
 import { GAME_CONFIG } from "@hex-duel/shared";
-import type { AttackType, Seat } from "@hex-duel/shared";
+import type { AttackType, BonusType, Seat } from "@hex-duel/shared";
 import ActionSelector, { type SelectorAction } from "../ui/ActionSelector.vue";
 import PlayerProfile from "../ui/PlayerProfile.vue";
 import TurnTimer from "../ui/TurnTimer.vue";
@@ -84,6 +88,7 @@ const props = defineProps<{
   players: {
     seat: Seat;
     pseudonym?: string;
+    armedBonus?: BonusType | null;
     crystals: number;
     isAlive: boolean;
     hasValidated: boolean;
@@ -94,6 +99,8 @@ const props = defineProps<{
   /** Game over: the turn counter, timer and status texts are hidden. */
   finished: boolean;
   mySeat: Seat | null;
+  /** 1-based index of the regenerated (green) crystal, per seat. */
+  regenCrystalIndex?: [number | null, number | null];
 }>();
 
 // Display pseudonym of the seat (D-142/143), with a "you" marker on my own

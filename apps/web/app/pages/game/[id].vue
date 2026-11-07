@@ -10,6 +10,8 @@
         :my-seat="mySeat ?? 0"
         :resolution="resolution"
         :interrupt="interruptResolution"
+        :bonuses="gameState?.bonuses ?? []"
+        :current-turn="gameState?.turnNumber ?? 0"
         @move-target="onMoveTarget"
         @attack-direction="onAttackDirection"
         @aim-locked-change="onAimLockedChange"
@@ -20,6 +22,7 @@
         :turn-number="gameState?.turnNumber ?? 0"
         :deadline-at="gameState?.turnDeadlineAt ?? 0"
         :players="displayedPlayers"
+        :regen-crystal-index="regenCrystalIndex"
         :selected-action="selectedAction"
         :locked="locked"
         :opponent-ready="opponentReady"
@@ -66,7 +69,7 @@
 
 <script setup lang="ts">
 import { GAME_CONFIG } from "@hex-duel/shared";
-import type { AttackType, PlayerAction, Vector2 } from "@hex-duel/shared";
+import type { AttackType, BonusEvents, PlayerAction, Vector2 } from "@hex-duel/shared";
 import GameCanvas from "~/components/game/GameCanvas.vue";
 import GameHUD from "~/components/game/GameHUD.vue";
 import type { SelectorAction } from "~/components/ui/ActionSelector.vue";
@@ -94,6 +97,9 @@ const resolution = ref<{ steps: ResolutionStep[] } | null>(null);
 // last crystal): the remaining steps are cancelled, nothing animates
 // behind the victory/defeat overlay.
 const interruptResolution = ref(false);
+// Index (1-based) of the crystal restored by a regeneration, per seat: it
+// displays as the green crystal until destroyed again.
+const regenCrystalIndex = ref<[number | null, number | null]>([null, null]);
 // Crystals displayed in the HUD: during the resolution animation the
 // server state is already patched, so we hold the pre-attack values and
 // only let a crystal break when the attack animation actually lands.
@@ -296,6 +302,7 @@ type ResolvedTurn = {
   turnNumber: number;
   players: [ResolvedPlayer, ResolvedPlayer];
   attacks?: ResolvedAttack[];
+  bonusEvents?: BonusEvents | null;
 };
 
 const onTurnRevealed = (message: RevealedTurn): void => {
@@ -421,6 +428,18 @@ const bindMessages = (): void => {
     interruptResolution.value = message.players.some(
       (player) => !player.isAlive || player.crystals <= 0,
     );
+    // Regeneration: the restored crystal displays as green (UI_UX 30.3);
+    // a crystal loss clears the green marker if that crystal is gone.
+    for (const regen of message.bonusEvents?.regen ?? []) {
+      regenCrystalIndex.value[regen.seat] = regen.crystalsAfter;
+    }
+    for (const seat of [0, 1] as const) {
+      const crystals = message.players[seat]?.crystals ?? 3;
+      const greenIndex = regenCrystalIndex.value[seat];
+      if (greenIndex !== null && crystals < greenIndex) {
+        regenCrystalIndex.value[seat] = null;
+      }
+    }
     resolution.value = {
       steps: buildResolutionSteps(moveStep, revealedEntries.value, message.attacks),
     };

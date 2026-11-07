@@ -7,24 +7,41 @@
         :key="index"
         class="crystal"
         :class="{ lost: index > crystals }"
-        :src="index > crystals ? brokenSrc : crystalSrc"
+        :src="crystalSrcFor(index)"
         alt=""
         draggable="false"
       >
     </div>
     <span class="label">{{ name }}</span>
+    <!-- Armed bonus icon, visible to both players (UI_UX 30.2). -->
+    <img
+      v-if="armedBonus"
+      class="armed-bonus"
+      :src="armedBonusSrc"
+      :alt="t(`bonus.${armedBonus}`)"
+      :title="t(`bonus.${armedBonus}`)"
+      draggable="false"
+    >
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
 import { GAME_CONFIG } from "@hex-duel/shared";
+import type { BonusType } from "@hex-duel/shared";
+import { useI18n } from "~/composables/useI18n";
 
 const props = defineProps<{
   name: string;
   seat: 0 | 1;
   crystals: number;
+  /** Bonus armed by this player (REGEN never shows: immediate effect). */
+  armedBonus?: BonusType | null;
+  /** 1-based index of the crystal restored by a regeneration (green). */
+  regenIndex?: number | null;
 }>();
+
+const { t } = useI18n();
 
 const maxCrystals = GAME_CONFIG.maxCrystals;
 const seatClass = computed(() => (props.seat === 0 ? "seat-0" : "seat-1"));
@@ -37,6 +54,21 @@ const crystalSrc = computed(() =>
   props.seat === 0 ? "/img/crystal-red-hex.png" : "/img/crystal-blue-hex.png",
 );
 const brokenSrc = "/img/crystal-broken-hex.png";
+const greenSrc = "/img/crystal-green-hex.png";
+
+/** Broken when lost, green for the regenerated one, seat color otherwise. */
+const crystalSrcFor = (index: number): string => {
+  if (index > props.crystals) return brokenSrc;
+  if (index === props.regenIndex) return greenSrc;
+  return crystalSrc.value;
+};
+
+const armedBonusSrc = computed(() => {
+  if (props.armedBonus === "ATTACK") return "/img/bonus-atk.png";
+  if (props.armedBonus === "MOVE") return "/img/bonus-move.png";
+  if (props.armedBonus === "SHIELD") return "/img/bonus-shield.png";
+  return "/img/bonus-crystal.png";
+});
 </script>
 
 <style scoped>
@@ -107,5 +139,15 @@ const brokenSrc = "/img/crystal-broken-hex.png";
   margin-top: 2px;
   font-weight: 600;
   letter-spacing: 0.04em;
+}
+
+/* Armed bonus icon under the player name (UI_UX 30.2). */
+.armed-bonus {
+  display: block;
+  margin: 6px auto 0;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.8));
 }
 </style>

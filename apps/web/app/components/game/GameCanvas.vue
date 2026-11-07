@@ -28,12 +28,13 @@ import {
   Vector3,
   WebGLRenderer,
 } from "three";
-import type { AttackType, Vector2 as GameVector2 } from "@hex-duel/shared";
+import type { AttackType, GroundBonus, Vector2 as GameVector2 } from "@hex-duel/shared";
 import { GAME_CONFIG } from "@hex-duel/shared";
 import { buildArenaBounds, isInsideArena } from "@hex-duel/game-logic";
 import { CHARACTER_CLIPS, loadCharacterModel } from "./characterModels";
 import { attachWeaponAndGrip, loadWeaponModel } from "./characterWeapon";
 import { SLASH_SPAWN, SlashEffect, loadSlashModel, preloadSlashModels } from "./slashEffect";
+import { BonusRenderer, preloadBonusModels } from "./bonusRenderer";
 import { CharacterAnimator } from "./characterAnimator";
 import { createArenaLighting, enableCharacterShadows } from "./arenaLighting";
 import type { ArenaLighting } from "./arenaLighting";
@@ -53,6 +54,10 @@ const props = defineProps<{
   /** A player just lost their last crystal: the remaining resolution
    * steps are cancelled so nothing animates behind the result overlay. */
   interrupt: boolean;
+  /** Bonuses lying on the arena (public synced state, D-134). */
+  bonuses: GroundBonus[];
+  /** Current turn number, for the last-turn translucency. */
+  currentTurn: number;
 }>();
 
 const emit = defineEmits<{
@@ -97,6 +102,7 @@ let aimIndicator: Mesh | null = null;
 let moveIndicator: Mesh | null = null;
 let trajectoryLine: Line | null = null;
 let attackCone: Mesh | null = null;
+let bonusRenderer: BonusRenderer | null = null;
 let rangeCircle: Mesh | null = null;
 let moveRangeCircle: Mesh | null = null;
 
@@ -182,8 +188,10 @@ const buildCapsules = (): void => {
   const mixers: [CharacterAnimator, CharacterAnimator] = [] as never;
   for (const seat of [0, 1] as const) {
     scene.add(groups[seat]);
-    // Energy slash VFX models, preloaded once for the session.
+    // Energy slash VFX models + bonus models, preloaded once.
     void preloadSlashModels();
+    void preloadBonusModels();
+    bonusRenderer = new BonusRenderer(scene);
 
     // GLB character (red samurai / blue knight), loaded asynchronously,
     // normalized to ~2x the previous character height, facing the opponent.
@@ -441,6 +449,8 @@ const render = (): void => {
   }
   lastFrameTime = now;
   stepResolution();
+  bonusRenderer?.sync(props.bonuses, props.currentTurn);
+  bonusRenderer?.update(now);
   renderer.render(scene, camera);
   animationFrame = requestAnimationFrame(render);
 };
