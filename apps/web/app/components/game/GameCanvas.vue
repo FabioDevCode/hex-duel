@@ -784,7 +784,7 @@ const stepResolution = (): void => {
       if (fadedGhosts.has(pickup.bonus.id)) continue;
       const dx = group.position.x - pickup.bonus.position.x;
       const dz = group.position.z - pickup.bonus.position.z;
-      if (Math.hypot(dx, dz) <= 1) {
+      if (Math.hypot(dx, dz) <= BONUS_CONFIG.pickupRadius) {
         fadedGhosts.add(pickup.bonus.id);
         bonusRenderer?.fadeGhost(pickup.bonus.id);
       }

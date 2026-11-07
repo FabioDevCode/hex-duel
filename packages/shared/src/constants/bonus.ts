@@ -5,8 +5,9 @@ import { GAME_CONFIG } from "./config";
  * values are PROPOSED pending balancing (D-199) - do not treat as final.
  */
 export const BONUS_CONFIG = {
-  /** Radius around a bonus in which a player picks it up (PROPOSED). */
-  pickupRadius: 1,
+  /** Radius around a bonus in which a player picks it up (PROPOSED):
+   * matches the delimited ground zone shown by the marker. */
+  pickupRadius: 1.3,
   /** Ground lifetime: the spawn turn + this many extra turns. */
   groundLifetimeTurns: 1,
   /** Maximum bonuses lying on the arena at once. */

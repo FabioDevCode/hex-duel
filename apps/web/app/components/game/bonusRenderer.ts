@@ -31,8 +31,10 @@ const LEVITATION_BASE_Y = 1.6;
 const LEVITATION_AMPLITUDE = 0.25;
 const LEVITATION_SPEED = 2;
 const SPIN_SPEED = 0.8;
-const MARKER_INNER = 0.7;
-const MARKER_OUTER = 1.0;
+// The ground zone matches the pickup radius: entering the ring
+// guarantees the pickup.
+const MARKER_INNER = 1.0;
+const MARKER_OUTER = 1.3;
 /** Opaque on the spawn turn, translucent on the last one. */
 const LAST_TURN_OPACITY = 0.45;
 

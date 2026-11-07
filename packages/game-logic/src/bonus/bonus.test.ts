@@ -180,10 +180,11 @@ describe("resolveTurn with bonuses", () => {
 
   it("picks up by trajectory crossing the bonus", () => {
     const ground: GroundBonus[] = [
-      { id: "move-1", type: "MOVE", position: { x: -2, z: 0.5 }, spawnTurn: 2 },
+      { id: "move-1", type: "MOVE", position: { x: -2, z: 0.9 }, spawnTurn: 2 },
     ];
     // Moves from -6 to -1 (5 units, legal); the path passes within the
-    // pickup radius of the bonus but the final position does not.
+    // pickup radius of the bonus but the final position does not
+    // (distance ~1.35 > 1.3).
     const resolution = resolveTurn(
       [player(0, -6, 0), player(1, 6, 0)],
       { 0: { type: "MOVE", target: { x: -1, z: 0 } }, 1: { type: "PASS" } },
