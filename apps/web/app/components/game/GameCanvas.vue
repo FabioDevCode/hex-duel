@@ -523,7 +523,9 @@ const MOVE_DURATION_MS = 1500;
 const ATTACK_ANIM_MS = 1500;
 // Hit reaction on the target: the knockdown starts a few ms before the
 // attack clip ends, then the target gets back up.
-const KNOCK_LEAD_MS = 450;
+// Per attack type: the STRIKE knockdown starts a bit earlier than the
+// SNIPER one (whose timing is already right for the long attack).
+const KNOCK_LEAD_MS: Record<AttackType, number> = { STRIKE: 600, SNIPER: 450 };
 
 // Energy slash staging per attack type.
 // - STRIKE (red ground ring): the model is a "C" ring open around -60deg
@@ -768,7 +770,7 @@ const stepResolution = (): void => {
     // Phase 3: a few ms before the attack lands, the target starts
     // falling ("Renverser" / Knock_Down, horizontally pinned).
     const attackElapsed = elapsed - step.turnDurationMs;
-    if (step.hit && !step.knockStarted && attackElapsed >= ATTACK_ANIM_MS - KNOCK_LEAD_MS) {
+    if (step.hit && !step.knockStarted && attackElapsed >= ATTACK_ANIM_MS - KNOCK_LEAD_MS[step.type]) {
       step.knockStarted = true;
       animators?.[targetSeat]?.playOncePinned("Knock_Down", KNOCKDOWN_MS, () => {
         const active = activeStep.value;
