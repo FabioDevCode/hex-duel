@@ -535,7 +535,7 @@ const KNOCK_LEAD_MS = 450;
 const SLASH_YAW_OFFSET: Record<AttackType, number> = { STRIKE: (2 * Math.PI) / 3, SNIPER: Math.PI / 2 };
 const SLASH_TIMING: Record<AttackType, { delay: number; grow: number; fade: number }> = {
   STRIKE: { delay: 0, grow: 550, fade: ATTACK_ANIM_MS - 550 },
-  SNIPER: { delay: ATTACK_ANIM_MS - KNOCK_LEAD_MS, grow: 350, fade: 250 },
+  SNIPER: { delay: 850, grow: 350, fade: 250 },
 };
 const KNOCKDOWN_MS = 900;
 const ARISE_MS = 800;
@@ -569,11 +569,6 @@ const shortestAngle = (from: number, to: number): number => {
   if (delta < -Math.PI) delta += Math.PI * 2;
   return delta;
 };
-
-/** World direction (degrees) the active attack step was aimed at.
- * The pivot yaw is PI/2 - dirRad - modelYawOffset, hence this inversion. */
-const nextDirection = (step: { kind: "attack"; turnToYaw: number; seat: 0 | 1 }): number =>
-  radToDeg(Math.PI / 2 - (step.turnToYaw + modelYawOffset(step.seat)));
 
 /** Yaw for a seat to face the opponent's current visual position. */
 const yawTowardOpponent = (seat: 0 | 1): number => {
@@ -646,6 +641,41 @@ const startNextStep = (): void => {
       slash: null,
       startedAt: performance.now(),
     };
+    // Energy slash: spawned right away (during the pivot), so the effect
+    // starts earlier than the attack clip itself. It grows and travels
+    // toward the opponent on a hit (or up to the attack range on a miss);
+    // per-type staging then fades it out.
+    if (scene && group) {
+      const from = group.position.clone();
+      const dirRad = degToRad(next.direction);
+      const dir = new Vector3(Math.cos(dirRad), 0, Math.sin(dirRad));
+      const range = attackParams(next.type).range;
+      const targetGroup = capsules?.[next.seat === 0 ? 1 : 0];
+      let travel: number = range;
+      if (next.hit && targetGroup) {
+        const toTarget = targetGroup.position.clone().sub(group.position);
+        toTarget.y = 0;
+        travel = Math.min(range * 1.3, Math.max(1, toTarget.length()));
+      }
+      const to = from.clone().add(dir.multiplyScalar(travel));
+      void loadSlashModel(next.type).then((model) => {
+        const active = activeStep.value;
+        if (active?.kind !== "attack" || active.seat !== next.seat || active.slash) return;
+        const timing = SLASH_TIMING[next.type];
+        active.slash = new SlashEffect(
+          scene!,
+          next.type,
+          model,
+          from,
+          to,
+          SLASH_YAW_OFFSET[next.type] - dirRad,
+          performance.now(),
+          timing.delay,
+          timing.grow,
+          timing.fade,
+        );
+      });
+    }
   }
 };
 
@@ -711,6 +741,8 @@ const stepResolution = (): void => {
   if (step.kind === "attack") {
     const group = capsules[step.seat];
     const elapsed = now - step.startedAt;
+    // The slash updates every frame, including during the pivot.
+    step.slash?.update(now);
     // Phase 1: pivot in place toward the attack direction.
     if (elapsed < step.turnDurationMs) {
       const t = Math.min(1, elapsed / step.turnDurationMs);
@@ -729,41 +761,6 @@ const stepResolution = (): void => {
           activeStep.value.attackDone = true;
         }
       });
-      // Energy slash: spawns tiny near the attacker and grows toward the
-      // opponent (or up to the attack range on a miss); per-type staging
-      // (see SLASH_TIMING) then fades out. On a miss it travels the full
-      // attack range along the chosen direction.
-      if (scene) {
-        const from = group.position.clone();
-        const dirRad = degToRad(nextDirection(step));
-        const dir = new Vector3(Math.cos(dirRad), 0, Math.sin(dirRad));
-        const range = attackParams(step.type).range;
-        const targetGroup = capsules?.[step.seat === 0 ? 1 : 0];
-        let travel: number = range;
-        if (step.hit && targetGroup) {
-          const toTarget = targetGroup.position.clone().sub(group.position);
-          toTarget.y = 0;
-          travel = Math.min(range * 1.3, Math.max(1, toTarget.length()));
-        }
-        const to = from.clone().add(dir.multiplyScalar(travel));
-        void loadSlashModel(step.type).then((model) => {
-          const active = activeStep.value;
-          if (active?.kind !== "attack" || active.seat !== step.seat || active.slash) return;
-          const timing = SLASH_TIMING[step.type];
-          active.slash = new SlashEffect(
-            scene!,
-            step.type,
-            model,
-            from,
-            to,
-            SLASH_YAW_OFFSET[step.type] - dirRad,
-            performance.now(),
-            timing.delay,
-            timing.grow,
-            timing.fade,
-          );
-        });
-      }
     }
     step.slash?.update(now);
     // Phase 3: a few ms before the attack lands, the target starts
