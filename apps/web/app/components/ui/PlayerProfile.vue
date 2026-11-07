@@ -141,13 +141,20 @@ const armedBonusSrc = computed(() => {
   letter-spacing: 0.04em;
 }
 
-/* Armed bonus icon under the player name (UI_UX 30.2). */
+/*
+ * Armed bonus badge (UI_UX 30.2): absolutely positioned over the lower
+ * chain band, right under the crystals - it floats on the profile without
+ * affecting the layout flow (no shift of the name or the crystals).
+ */
 .armed-bonus {
-  display: block;
-  margin: 6px auto 0;
-  width: 34px;
-  height: 34px;
+  position: absolute;
+  top: 98px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 30px;
   object-fit: contain;
-  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.8));
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.9));
+  pointer-events: none;
 }
 </style>

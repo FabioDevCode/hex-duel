@@ -28,8 +28,8 @@ import {
   Vector3,
   WebGLRenderer,
 } from "three";
-import type { AttackType, GroundBonus, Vector2 as GameVector2 } from "@hex-duel/shared";
-import { GAME_CONFIG } from "@hex-duel/shared";
+import type { AttackType, BonusType, GroundBonus, Vector2 as GameVector2 } from "@hex-duel/shared";
+import { BONUS_CONFIG, GAME_CONFIG } from "@hex-duel/shared";
 import { buildArenaBounds, isInsideArena } from "@hex-duel/game-logic";
 import { CHARACTER_CLIPS, loadCharacterModel } from "./characterModels";
 import { attachWeaponAndGrip, loadWeaponModel } from "./characterWeapon";
@@ -58,6 +58,11 @@ const props = defineProps<{
   bonuses: GroundBonus[];
   /** Current turn number, for the last-turn translucency. */
   currentTurn: number;
+  /** My armed bonus: boosts the aiming range/angle of the next action. */
+  armedBonus: BonusType | null;
+  /** Bonuses picked up this resolution: they stay visible until the
+   * attack slash or the moving character reaches them. */
+  pendingPickups: { seat: 0 | 1; bonus: GroundBonus; method: "POSITION" | "TRAJECTORY" | "ATTACK" }[];
 }>();
 
 const emit = defineEmits<{
@@ -118,7 +123,13 @@ const makeLineGeometry = (positions: Float32Array): BufferGeometry => {
 const degToRad = (deg: number): number => (deg * Math.PI) / 180;
 const radToDeg = (rad: number): number => (rad * 180) / Math.PI;
 
-const attackParams = (type: AttackType) => GAME_CONFIG.attacks[type];
+/** Aiming params: boosted while an ATTACK bonus is armed (next attack). */
+const attackParams = (type: AttackType) =>
+  props.armedBonus === "ATTACK" ? BONUS_CONFIG.boosted.attacks[type] : GAME_CONFIG.attacks[type];
+
+/** Aiming move range: boosted while a MOVE bonus is armed (next move). */
+const aimMoveDistance = () =>
+  props.armedBonus === "MOVE" ? BONUS_CONFIG.boosted.moveDistance : GAME_CONFIG.maxMoveDistance;
 
 const setupScene = (): void => {
   if (!container.value) return;
@@ -298,8 +309,8 @@ const clampMoveDistance = (from: GameVector2, target: GameVector2): GameVector2 
   const dx = target.x - from.x;
   const dz = target.z - from.z;
   const dist = Math.sqrt(dx * dx + dz * dz);
-  if (dist <= GAME_CONFIG.maxMoveDistance + EPSILON) return target;
-  const scale = GAME_CONFIG.maxMoveDistance / dist;
+  if (dist <= aimMoveDistance() + EPSILON) return target;
+  const scale = aimMoveDistance() / dist;
   return { x: from.x + dx * scale, z: from.z + dz * scale };
 };
 
@@ -368,7 +379,8 @@ const updateIndicators = (): void => {
   if (action?.type === "MOVE") {
     // Move range ring around the player
     moveRangeCircle.visible = true;
-    moveRangeCircle.scale.set(GAME_CONFIG.maxMoveDistance, GAME_CONFIG.maxMoveDistance, 1);
+    const moveRange = aimMoveDistance();
+    moveRangeCircle.scale.set(moveRange, moveRange, 1);
     moveRangeCircle.position.set(myPos.x, 0.6, myPos.z);
 
     // When the aim is locked, show the frozen target; otherwise follow the
@@ -619,6 +631,7 @@ const startNextStep = (): void => {
     activeStep.value = null;
     isAnimatingResolution.value = false;
     updateCapsulePositions();
+    bonusRenderer?.clearGhosts();
     emit("resolutionEnd");
     return;
   }
@@ -643,6 +656,22 @@ const startNextStep = (): void => {
       faceStarted: false,
       startedAt: performance.now(),
     };
+    // Picked-up bonuses stay visible until the walker reaches them:
+    // TRAJECTORY at the pass-through moment, POSITION at the arrival.
+    const moveStart = performance.now();
+    const travelLen = Math.hypot(next.to.x - next.from.x, next.to.z - next.from.z);
+    for (const pickup of props.pendingPickups) {
+      if (pickup.seat !== next.seat || pickup.method === "ATTACK") continue;
+      let contactOffset = turnDurationMs + MOVE_DURATION_MS;
+      if (pickup.method === "TRAJECTORY" && travelLen > 1e-9) {
+        const dx = pickup.bonus.position.x - next.from.x;
+        const dz = pickup.bonus.position.z - next.from.z;
+        const along = Math.max(0, Math.min(1,
+          (dx * (next.to.x - next.from.x) + dz * (next.to.z - next.from.z)) / (travelLen * travelLen)));
+        contactOffset = turnDurationMs + along * MOVE_DURATION_MS;
+      }
+      bonusRenderer?.addGhost(pickup.bonus, moveStart + contactOffset);
+    }
   } else if (next.kind === "attack") {
     // Attack step: no cone printed on the floor anymore - the character
     // pivots toward the attack direction, then plays its attack clip.
@@ -691,6 +720,19 @@ const startNextStep = (): void => {
         travel = Math.min(range * 1.3, Math.max(1, toTarget.length()));
       }
       const to = from.clone().add(dir.clone().multiplyScalar(travel));
+      // Picked-up bonuses stay visible until the slash reaches them:
+      // contact when the growing slash's leading edge crosses the bonus.
+      const fullRadius = 2.4 * 0.95;
+      for (const pickup of props.pendingPickups) {
+        if (pickup.seat !== next.seat || pickup.method !== "ATTACK") continue;
+        const toBonus = pickup.bonus.position.x * Math.cos(dirRad) + pickup.bonus.position.z * Math.sin(dirRad)
+          - (from.x * Math.cos(dirRad) + from.z * Math.sin(dirRad));
+        const easedContact = Math.max(0, Math.min(1,
+          (toBonus - 0.12 * fullRadius) / (travel + 0.88 * fullRadius)));
+        const timing = SLASH_TIMING[next.type];
+        const contactOffset = turnDurationMs + timing.delay + timing.grow * easedContact;
+        bonusRenderer?.addGhost(pickup.bonus, performance.now() + contactOffset);
+      }
       // SNIPER: the charge disc spawns tiny, in front of the attacker.
       from.add(dir.clone().multiplyScalar(SLASH_SPAWN[next.type].forward));
       void loadSlashModel(next.type).then((model) => {

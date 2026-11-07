@@ -18,8 +18,7 @@ export const BonusEventsSchema = z.object({
   pickups: z.array(
     z.object({
       seat: z.union([z.literal(0), z.literal(1)]),
-      bonusId: z.string().min(1),
-      type: BonusTypeSchema,
+      bonus: GroundBonusSchema,
       method: PickupMethodSchema,
     }),
   ),

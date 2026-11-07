@@ -169,8 +169,8 @@ describe("resolveTurn with bonuses", () => {
       2,
       bonusContext(ground),
     );
-    expect(resolution.bonuses!.events.pickups).toEqual([
-      { seat: 0, bonusId: "regen-1", type: "REGEN", method: "POSITION" },
+    expect(resolution.bonuses!.events.pickups).toMatchObject([
+      { seat: 0, bonus: { id: "regen-1", type: "REGEN" }, method: "POSITION" },
     ]);
     expect(resolution.bonuses!.events.regen).toEqual([{ seat: 0, crystalsAfter: 3 }]);
     expect(resolution.players[0].crystals).toBe(3);
@@ -193,7 +193,7 @@ describe("resolveTurn with bonuses", () => {
     );
     expect(resolution.bonuses!.events.pickups[0]).toMatchObject({
       seat: 0,
-      bonusId: "move-1",
+      bonus: { id: "move-1" },
       method: "TRAJECTORY",
     });
     expect(resolution.bonuses!.armed[0]).toBe("MOVE");
@@ -214,7 +214,7 @@ describe("resolveTurn with bonuses", () => {
     );
     expect(resolution.bonuses!.events.pickups[0]).toMatchObject({
       seat: 0,
-      bonusId: "shield-1",
+      bonus: { id: "shield-1" },
       method: "ATTACK",
     });
     expect(resolution.bonuses!.armed[0]).toBe("SHIELD");

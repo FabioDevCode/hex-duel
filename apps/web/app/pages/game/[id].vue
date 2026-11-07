@@ -12,6 +12,8 @@
         :interrupt="interruptResolution"
         :bonuses="gameState?.bonuses ?? []"
         :current-turn="gameState?.turnNumber ?? 0"
+        :armed-bonus="gameState?.players?.[mySeat ?? 0]?.armedBonus ?? null"
+        :pending-pickups="pendingPickups"
         @move-target="onMoveTarget"
         @attack-direction="onAttackDirection"
         @aim-locked-change="onAimLockedChange"
@@ -100,6 +102,9 @@ const interruptResolution = ref(false);
 // Index (1-based) of the crystal restored by a regeneration, per seat: it
 // displays as the green crystal until destroyed again.
 const regenCrystalIndex = ref<[number | null, number | null]>([null, null]);
+// Bonuses picked up in the current resolution: the canvas keeps them
+// visible until the slash or the moving character reaches them.
+const pendingPickups = ref<BonusEvents["pickups"]>([]);
 // Crystals displayed in the HUD: during the resolution animation the
 // server state is already patched, so we hold the pre-attack values and
 // only let a crystal break when the attack animation actually lands.
@@ -175,6 +180,7 @@ const onHitLanded = (targetSeat: 0 | 1): void => {
 /** Resolution sequence over: display the authoritative crystals again. */
 const onResolutionEnd = (): void => {
   crystalsHold.value = null;
+  pendingPickups.value = [];
 };
 
 const playerPositions = computed<[Vector2, Vector2]>(() => {
@@ -428,6 +434,7 @@ const bindMessages = (): void => {
     interruptResolution.value = message.players.some(
       (player) => !player.isAlive || player.crystals <= 0,
     );
+    pendingPickups.value = message.bonusEvents?.pickups ?? [];
     // Regeneration: the restored crystal displays as green (UI_UX 30.3);
     // a crystal loss clears the green marker if that crystal is gone.
     for (const regen of message.bonusEvents?.regen ?? []) {

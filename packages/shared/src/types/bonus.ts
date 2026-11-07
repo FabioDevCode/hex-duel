@@ -18,7 +18,7 @@ export type PickupMethod = "POSITION" | "TRAJECTORY" | "ATTACK";
 /** Bonus events of one resolved turn (public data, sent with turn_resolved). */
 export type BonusEvents = {
   spawned: GroundBonus[];
-  pickups: { seat: 0 | 1; bonusId: string; type: BonusType; method: PickupMethod }[];
+  pickups: { seat: 0 | 1; bonus: GroundBonus; method: PickupMethod }[];
   contested: string[];
   expired: string[];
   regen: { seat: 0 | 1; crystalsAfter: number }[];

@@ -301,7 +301,7 @@ const finish = (
         const crystals = Math.min(GAME_CONFIG.maxCrystals, players[seat].crystals + 1);
         players[seat] = { ...players[seat], crystals, isAlive: crystals > 0 ? players[seat].isAlive : false };
         events.regen.push({ seat, crystalsAfter: crystals });
-        events.pickups.push({ seat, bonusId: bonusItem.id, type: bonusItem.type, method });
+        events.pickups.push({ seat, bonus: bonusItem, method });
         pickedIds.add(bonusItem.id);
         continue;
       }
@@ -309,7 +309,7 @@ const finish = (
       // Single armed slot: the new bonus replaces the previous one (D-194).
       armed[seat] = bonusItem.type;
       slotTaken[seat] = true;
-      events.pickups.push({ seat, bonusId: bonusItem.id, type: bonusItem.type, method });
+      events.pickups.push({ seat, bonus: bonusItem, method });
       pickedIds.add(bonusItem.id);
     }
 
