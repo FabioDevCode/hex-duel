@@ -108,6 +108,8 @@ let moveIndicator: Mesh | null = null;
 let trajectoryLine: Line | null = null;
 let attackCone: Mesh | null = null;
 let bonusRenderer: BonusRenderer | null = null;
+/** Ghost bonuses already dissolving this resolution. */
+const fadedGhosts = new Set<string>();
 let rangeCircle: Mesh | null = null;
 let moveRangeCircle: Mesh | null = null;
 
@@ -590,6 +592,7 @@ const activeStep = ref<ActiveStep | null>(null);
 
 const playResolution = (): void => {
   if (!scene || !capsules) return;
+  fadedGhosts.clear();
   // Any leftover walking state from a previous resolution is cleanly
   // crossfaded back to idle before the new sequence starts.
   animators?.[0]?.playIdle();
@@ -656,21 +659,11 @@ const startNextStep = (): void => {
       faceStarted: false,
       startedAt: performance.now(),
     };
-    // Picked-up bonuses stay visible until the walker reaches them:
-    // TRAJECTORY at the pass-through moment, POSITION at the arrival.
-    const moveStart = performance.now();
-    const travelLen = Math.hypot(next.to.x - next.from.x, next.to.z - next.from.z);
+    // Picked-up bonuses stay visible (ghosts); they dissolve when the
+    // walker comes within the pickup radius, checked frame by frame.
     for (const pickup of props.pendingPickups) {
       if (pickup.seat !== next.seat || pickup.method === "ATTACK") continue;
-      let contactOffset = turnDurationMs + MOVE_DURATION_MS;
-      if (pickup.method === "TRAJECTORY" && travelLen > 1e-9) {
-        const dx = pickup.bonus.position.x - next.from.x;
-        const dz = pickup.bonus.position.z - next.from.z;
-        const along = Math.max(0, Math.min(1,
-          (dx * (next.to.x - next.from.x) + dz * (next.to.z - next.from.z)) / (travelLen * travelLen)));
-        contactOffset = turnDurationMs + along * MOVE_DURATION_MS;
-      }
-      bonusRenderer?.addGhost(pickup.bonus, moveStart + contactOffset);
+      bonusRenderer?.addGhost(pickup.bonus);
     }
   } else if (next.kind === "attack") {
     // Attack step: no cone printed on the floor anymore - the character
@@ -720,18 +713,12 @@ const startNextStep = (): void => {
         travel = Math.min(range * 1.3, Math.max(1, toTarget.length()));
       }
       const to = from.clone().add(dir.clone().multiplyScalar(travel));
-      // Picked-up bonuses stay visible until the slash reaches them:
-      // contact when the growing slash's leading edge crosses the bonus.
-      const fullRadius = 2.4 * 0.95;
+      // Picked-up bonuses stay visible (ghosts); they dissolve when the
+      // slash reaches its target - the same moment the knockdown starts,
+      // triggered frame by frame in stepResolution.
       for (const pickup of props.pendingPickups) {
         if (pickup.seat !== next.seat || pickup.method !== "ATTACK") continue;
-        const toBonus = pickup.bonus.position.x * Math.cos(dirRad) + pickup.bonus.position.z * Math.sin(dirRad)
-          - (from.x * Math.cos(dirRad) + from.z * Math.sin(dirRad));
-        const easedContact = Math.max(0, Math.min(1,
-          (toBonus - 0.12 * fullRadius) / (travel + 0.88 * fullRadius)));
-        const timing = SLASH_TIMING[next.type];
-        const contactOffset = turnDurationMs + timing.delay + timing.grow * easedContact;
-        bonusRenderer?.addGhost(pickup.bonus, performance.now() + contactOffset);
+        bonusRenderer?.addGhost(pickup.bonus);
       }
       // SNIPER: the charge disc spawns tiny, in front of the attacker.
       from.add(dir.clone().multiplyScalar(SLASH_SPAWN[next.type].forward));
@@ -791,6 +778,17 @@ const stepResolution = (): void => {
     group.rotation.y = step.turnToYaw;
     group.position.x = step.from.x + (step.to.x - step.from.x) * walkEased;
     group.position.z = step.from.z + (step.to.z - step.from.z) * walkEased;
+    // Ghost bonuses dissolve when the walker reaches them.
+    for (const pickup of props.pendingPickups) {
+      if (pickup.seat !== step.seat || pickup.method === "ATTACK") continue;
+      if (fadedGhosts.has(pickup.bonus.id)) continue;
+      const dx = group.position.x - pickup.bonus.position.x;
+      const dz = group.position.z - pickup.bonus.position.z;
+      if (Math.hypot(dx, dz) <= 1) {
+        fadedGhosts.add(pickup.bonus.id);
+        bonusRenderer?.fadeGhost(pickup.bonus.id);
+      }
+    }
     if (walkT < 1) return;
     // Phase 3: arrived - turn to face the opponent.
     if (!step.faceStarted) {
@@ -841,8 +839,19 @@ const stepResolution = (): void => {
     }
     step.slash?.update(now);
     // Phase 3: a few ms before the attack lands, the target starts
-    // falling ("Renverser" / Knock_Down, horizontally pinned).
+    // falling ("Renverser" / Knock_Down, horizontally pinned). This is
+    // also when the slash reaches its target: the bonuses it picked up
+    // dissolve now (ghosts).
     const attackElapsed = elapsed - step.turnDurationMs;
+    if (attackElapsed >= ATTACK_ANIM_MS - KNOCK_LEAD_MS[step.type]) {
+      for (const pickup of props.pendingPickups) {
+        if (pickup.seat !== step.seat || pickup.method !== "ATTACK") continue;
+        if (!fadedGhosts.has(pickup.bonus.id)) {
+          fadedGhosts.add(pickup.bonus.id);
+          bonusRenderer?.fadeGhost(pickup.bonus.id);
+        }
+      }
+    }
     if (step.hit && !step.knockStarted && attackElapsed >= ATTACK_ANIM_MS - KNOCK_LEAD_MS[step.type]) {
       step.knockStarted = true;
       animators?.[targetSeat]?.playOncePinned("Knock_Down", KNOCKDOWN_MS, () => {

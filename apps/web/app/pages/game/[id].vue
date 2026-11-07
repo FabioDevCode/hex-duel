@@ -71,7 +71,7 @@
 
 <script setup lang="ts">
 import { GAME_CONFIG } from "@hex-duel/shared";
-import type { AttackType, BonusEvents, PlayerAction, Vector2 } from "@hex-duel/shared";
+import type { AttackType, BonusEvents, BonusType, PlayerAction, Vector2 } from "@hex-duel/shared";
 import GameCanvas from "~/components/game/GameCanvas.vue";
 import GameHUD from "~/components/game/GameHUD.vue";
 import type { SelectorAction } from "~/components/ui/ActionSelector.vue";
@@ -105,6 +105,13 @@ const regenCrystalIndex = ref<[number | null, number | null]>([null, null]);
 // Bonuses picked up in the current resolution: the canvas keeps them
 // visible until the slash or the moving character reaches them.
 const pendingPickups = ref<BonusEvents["pickups"]>([]);
+// Armed bonus held during the resolution animation: the icon only
+// appears once the pickup is actually visible (resolutionEnd), not the
+// moment the server state syncs.
+const armedHold = ref<[BonusType | null, BonusType | null]>([null, null]);
+const armedBeforeTurn = ref<[BonusType | null, BonusType | null]>([null, null]);
+/** True while the resolution plays: the armed icons are frozen. */
+const armedHoldActive = ref(false);
 // Crystals displayed in the HUD: during the resolution animation the
 // server state is already patched, so we hold the pre-attack values and
 // only let a crystal break when the attack animation actually lands.
@@ -158,10 +165,18 @@ const displayedPlayers = computed(() => {
   const players = gameState.value?.players;
   if (!players) return players;
   const hold = crystalsHold.value;
-  if (!hold) return players;
+  const armed = (index: 0 | 1, synced: BonusType | null): BonusType | null =>
+    armedHoldActive.value ? (armedHold.value[index] ?? null) : synced;
+  if (!hold) {
+    return players.map((player, index) => ({
+      ...player,
+      armedBonus: armed(index as 0 | 1, player.armedBonus),
+    }));
+  }
   return players.map((player, index) => ({
     ...player,
     crystals: hold[index as 0 | 1] ?? player.crystals,
+    armedBonus: armed(index as 0 | 1, player.armedBonus),
   }));
 });
 
@@ -181,6 +196,10 @@ const onHitLanded = (targetSeat: 0 | 1): void => {
 const onResolutionEnd = (): void => {
   crystalsHold.value = null;
   pendingPickups.value = [];
+  // Release the armed icons: the pickups are now visible on screen.
+  armedHoldActive.value = false;
+  const players = gameState.value?.players;
+  armedBeforeTurn.value = [players?.[0]?.armedBonus ?? null, players?.[1]?.armedBonus ?? null];
 };
 
 const playerPositions = computed<[Vector2, Vector2]>(() => {
@@ -435,6 +454,10 @@ const bindMessages = (): void => {
       (player) => !player.isAlive || player.crystals <= 0,
     );
     pendingPickups.value = message.bonusEvents?.pickups ?? [];
+    // Hold the armed bonuses as they were BEFORE this resolution: the
+    // icons must not change until the animation shows the pickup.
+    armedHold.value = armedBeforeTurn.value;
+    armedHoldActive.value = true;
     // Regeneration: the restored crystal displays as green (UI_UX 30.3);
     // a crystal loss clears the green marker if that crystal is gone.
     for (const regen of message.bonusEvents?.regen ?? []) {

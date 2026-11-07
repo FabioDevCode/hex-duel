@@ -70,9 +70,10 @@ type BonusInstance = {
   group: Group;
   marker: Mesh;
   materials: MeshStandardMaterial[];
-  /** Ghosts: picked-up bonuses kept on screen until the slash contact. */
-  deadline: number | null;
-  fadeStart: number | null;
+  /** Ghosts: picked-up bonuses kept on screen until the visual contact. */
+  ghost: boolean;
+  fading: boolean;
+  fadeStart: number;
 };
 
 const GHOST_FADE_MS = 250;
@@ -87,11 +88,8 @@ export class BonusRenderer {
   }
 
   /** Creates the visual instance of a bonus (model + ground marker). */
-  private createInstance(bonus: GroundBonus, deadline: number | null): void {
+  private createInstance(bonus: GroundBonus, ghost: boolean): void {
     const type = bonus.type as BonusType;
-    if (!this.knownTypes.has(type)) {
-      this.knownTypes.add(type);
-    }
     void loadBonusModel(type).then((model) => {
       if (this.instances.has(bonus.id)) return;
       const group = model.clone(true);
@@ -125,7 +123,7 @@ export class BonusRenderer {
       marker.position.set(bonus.position.x, 0.06, bonus.position.z);
       this.scene.add(group);
       this.scene.add(marker);
-      this.instances.set(bonus.id, { group, marker, materials, deadline, fadeStart: null });
+      this.instances.set(bonus.id, { group, marker, materials, ghost, fading: false, fadeStart: 0 });
     });
   }
 
@@ -133,20 +131,20 @@ export class BonusRenderer {
   sync(bonuses: readonly GroundBonus[], currentTurn: number): void {
     const alive = new Set(bonuses.map((bonus) => bonus.id));
     for (const [id, instance] of this.instances) {
-      // Ghosts are managed by their deadline, not by the ground list.
-      if (instance.deadline !== null) continue;
+      // Ghosts live until their visual contact, not tied to the ground list.
+      if (instance.ghost) continue;
       if (!alive.has(id)) {
         this.removeInstance(id, instance);
       }
     }
     for (const bonus of bonuses) {
       if (this.instances.has(bonus.id)) continue;
-      this.createInstance(bonus, null);
+      this.createInstance(bonus, false);
     }
     // Age-based opacity: opaque on the spawn turn, translucent on the next.
     for (const bonus of bonuses) {
       const instance = this.instances.get(bonus.id);
-      if (!instance || instance.deadline !== null) continue;
+      if (!instance || instance.ghost) continue;
       const age = currentTurn - bonus.spawnTurn;
       const opacity = age <= 0 ? 1 : LAST_TURN_OPACITY;
       for (const material of instance.materials) material.opacity = opacity;
@@ -154,24 +152,32 @@ export class BonusRenderer {
   }
 
   /**
-   * A picked-up bonus stays visible (a "ghost") until its deadline - the
-   * moment the attack slash or the moving character reaches it - then
-   * fades out over 250ms.
+   * A picked-up bonus stays visible (a "ghost") until fadeGhost is called -
+   * the visual contact moment, decided frame by frame by the canvas - then
+   * it dissolves over 250ms.
    */
-  addGhost(bonus: GroundBonus, deadline: number): void {
+  addGhost(bonus: GroundBonus): void {
     const existing = this.instances.get(bonus.id);
     if (existing) {
-      existing.deadline = deadline;
-      existing.fadeStart = null;
+      existing.ghost = true;
       return;
     }
-    this.createInstance(bonus, deadline);
+    this.createInstance(bonus, true);
+  }
+
+  /** Starts the 250ms dissolution of a ghost. */
+  fadeGhost(id: string): void {
+    const instance = this.instances.get(id);
+    if (instance && !instance.fading) {
+      instance.fading = true;
+      instance.fadeStart = performance.now();
+    }
   }
 
   /** Removes every remaining ghost (resolution over). */
   clearGhosts(): void {
     for (const [id, instance] of this.instances) {
-      if (instance.deadline !== null) this.removeInstance(id, instance);
+      if (instance.ghost) this.removeInstance(id, instance);
     }
   }
 
@@ -192,9 +198,8 @@ export class BonusRenderer {
       instance.group.rotation.y += SPIN_SPEED * 0.016;
       const markerMaterial = instance.marker.material as MeshStandardMaterial;
       markerMaterial.opacity = 0.55 + 0.35 * Math.sin(time * 3);
-      // Ghost fade: past the deadline, dissolve over GHOST_FADE_MS.
-      if (instance.deadline !== null && timeMs >= instance.deadline) {
-        if (instance.fadeStart === null) instance.fadeStart = timeMs;
+      // Ghost dissolution, started by fadeGhost.
+      if (instance.fading) {
         const fadeT = Math.min(1, (timeMs - instance.fadeStart) / GHOST_FADE_MS);
         for (const material of instance.materials) material.opacity = 1 - fadeT;
         markerMaterial.opacity = (1 - fadeT) * 0.8;
