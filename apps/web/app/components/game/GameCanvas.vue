@@ -518,7 +518,7 @@ const MOVE_DURATION_MS = 1500;
 const ATTACK_ANIM_MS = 1500;
 // Hit reaction on the target: the knockdown starts a few ms before the
 // attack clip ends, then the target gets back up.
-const KNOCK_LEAD_MS = 250;
+const KNOCK_LEAD_MS = 450;
 const KNOCKDOWN_MS = 900;
 const ARISE_MS = 800;
 
