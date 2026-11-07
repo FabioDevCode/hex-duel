@@ -534,7 +534,10 @@ const KNOCK_LEAD_MS: Record<AttackType, number> = { STRIKE: 850, SNIPER: 450 };
 //   immediately and grows fast.
 // - SNIPER (gold disc): launches almost at the end of the long attack
 //   (when the knockdown starts) and closes in very fast.
-const SLASH_YAW_OFFSET: Record<AttackType, number> = { STRIKE: (2 * Math.PI) / 3, SNIPER: Math.PI / 2 };
+// SNIPER: the disc's rounded back sits on the local -X half (gap centered
+// near +8deg, measured), so a PI offset points it along the travel
+// direction (world horizontal bulge angle = PI - yaw).
+const SLASH_YAW_OFFSET: Record<AttackType, number> = { STRIKE: (2 * Math.PI) / 3, SNIPER: Math.PI };
 const SLASH_TIMING: Record<AttackType, { delay: number; grow: number; fade: number }> = {
   STRIKE: { delay: 350, grow: 550, fade: ATTACK_ANIM_MS - 550 },
   SNIPER: { delay: 850, grow: 350, fade: 250 },
