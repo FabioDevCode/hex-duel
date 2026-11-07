@@ -556,3 +556,47 @@ Le GAME DESIGN DOCUMENT est considéré comme suffisamment défini pour passer a
 - Les décisions de gameplay structurantes sont validées.
 
 **Fin du document — HEX DUEL GAME DESIGN DOCUMENT v1.1**
+
+---
+
+## 16. Système de bonus sur l'arène
+
+### 16.1 Principe
+
+Des bonus apparaissent sur l'arène pendant la partie. Le ramassage est automatique : aucune action dédiée n'est nécessaire. Un bonus ramassé est dit « armé » et persiste jusqu'à son utilisation — aucune expiration.
+
+### 16.2 Les quatre bonus
+
+| Bonus | Effet | Consommation |
+| ----- | ----- | ------------ |
+| Régénération | +1 cristal (maximum 3), effet IMMÉDIAT | Immédiate, n'occupe pas d'emplacement |
+| Boost de déplacement | Portée de déplacement 5 → 7 | Prochain déplacement |
+| Boost d'attaque | STRIKE 6/90° → 8/180°, SNIPER 10/10° → 12/25° | Prochaine attaque (une seule) |
+| Bouclier | Absorbe le prochain coup reçu | Prochain coup reçu |
+
+### 16.3 Emplacement unique
+
+Un seul bonus armé à la fois par joueur (régénération exceptée). Ramasser un nouveau bonus remplace immédiatement l'ancien.
+
+### 16.4 Ramassage
+
+Trois façons de ramasser un bonus :
+
+1. La position finale du déplacement se trouve sur le bonus.
+2. La trajectoire du déplacement passe au travers du bonus.
+3. La zone d'une attaque couvre le bonus. Une attaque qui ramasse un bonus se résout normalement.
+
+Si les deux joueurs ramassent le même bonus au cours du même tour, personne ne l'obtient : le bonus reste au sol.
+
+### 16.5 Apparition des bonus
+
+- Le serveur tire au sort un seed en début de partie ; le planning des apparitions est déterministe (même seed → même planning).
+- Quantités tirées au sort : régénération 1-2, boost d'attaque 3-4, boost de déplacement 3-5, bouclier 2 (total 9 à 13 par partie).
+- Un seul bonus apparaît par tour maximum.
+- Premier bonus au tour 2 ou 3 ; dernière apparition possible au tour 22.
+- Répartition aléatoire des tours dans cette fenêtre, sans deux apparitions le même tour.
+- La position est calculée au tour de l'apparition (même seed), avec équité spatiale vis-à-vis des positions des deux joueurs.
+
+### 16.6 Durée de vie au sol et limite
+
+Un bonus au sol vit le tour de son apparition plus le tour suivant, puis disparaît s'il n'a pas été ramassé. Deux bonus simultanés au sol maximum.

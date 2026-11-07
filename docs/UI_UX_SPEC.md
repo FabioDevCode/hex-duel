@@ -1071,3 +1071,28 @@ Ces fonctionnalités pourront être étudiées ultérieurement.
 ---
 
 **Fin du document — HEX DUEL UI / UX SPECIFICATION v1.1**
+
+---
+
+# 30. Système de bonus — affichage
+
+## 30.1 Bonus au sol (rendu 3D)
+
+- Chaque bonus au sol apparaît EN LÉVITATION au-dessus de l'arène, avec un petit marqueur au sol à la position du bonus, de la couleur du modèle.
+- Le tour de son apparition, le modèle est opaque/normal ; au tour suivant (dernier avant disparition), il devient légèrement translucide.
+- Assets : `bonus-crystal.glb` (régénération), `bonus-move.glb` (déplacement), `bonus-atk.glb` (attaque), `bonus-shield.glb` (bouclier).
+
+## 30.2 Bonus armé (HUD)
+
+- L'icône 2D du bonus armé est affichée SOUS LE NOM du joueur qui le porte, visible par les deux joueurs.
+- Icônes : `bonus-crystal.png`, `bonus-move.png`, `bonus-atk.png`, `bonus-shield.png`.
+- Régénération : pas d'icône (effet immédiat).
+- Quand le bonus est consommé, l'icône disparaît.
+
+## 30.3 Régénération et cristaux
+
+Lorsqu'un joueur récupère un cristal via la régénération, le dernier cristal perdu est remplacé par le cristal vert (`crystal-green-hex.png`) dans l'affichage du joueur.
+
+## 30.4 Textes
+
+Tous les textes visibles liés aux bonus passent par le système centralisé de traduction FR/EN (D-164).

@@ -1269,3 +1269,29 @@ L'architecture technique est considérée comme correctement mise en place lorsq
 - Les commandes de vérification TypeScript et lint fonctionnent.
 
 **Fin du document — HEX DUEL TECHNICAL SPECIFICATION v0.1**
+
+---
+
+# 21. Système de bonus sur l'arène
+
+## 21.1 Logique pure (packages/game-logic)
+
+- `src/bonus/bonusPlanning.ts` : générateur déterministe du planning. Un PRNG seedé (mulberry32) tire les quantités (régénération 1-2, attaque 3-4, déplacement 3-5, bouclier 2), puis les tours d'apparition (distincts, dans la fenêtre 2-22, un maximum par tour). Même seed → même planning.
+- `src/bonus/resolveBonuses.ts` : spawn du tour (position équitable calculée au tour du spawn avec le même seed), expiration après 2 tours au sol, détection de ramassage (position finale, trajectoire — distance segment/point —, zone d'attaque), gestion de l'emplacement unique, de la régénération plafonnée à 3 cristaux, de l'absorption du bouclier et du double ramassage simultané.
+- `resolveTurn` accepte un contexte de bonus optionnel : sans contexte, le comportement est strictement identique à avant (aucun impact sur les parties sans bonus).
+
+## 21.2 Valeurs boostées
+
+Les valeurs boostées vivent dans `@hex-duel/shared` (BONUS_CONFIG) : déplacement 5 → 7 ; STRIKE 6/90° → 8/180° ; SNIPER 10/10° → 12/25°. Un bonus armé est consommé par la prochaine action concernée (une seule).
+
+## 21.3 Serveur (apps/server)
+
+- Le seed est généré côté serveur au démarrage de la partie et n'est jamais envoyé au client.
+- L'état Colyseus public expose : les bonus au sol (type, position, tour d'apparition) et le bonus armé de chaque joueur. Ce sont des données publiques ; seules les actions restent secrètes (D-134).
+- Le serveur reste l'unique autorité : validation, résolution, consommation, expiration.
+
+## 21.4 Client (apps/web)
+
+- Les bonus au sol sont rendus en 3D (modèles `bonus-*.glb`) en lévitation au-dessus de l'arène, avec un marqueur au sol coloré.
+- Le HUD affiche l'icône 2D du bonus armé sous le nom du joueur qui le porte.
+- La régénération remplace le dernier cristal perdu par le cristal vert dans l'affichage du joueur.

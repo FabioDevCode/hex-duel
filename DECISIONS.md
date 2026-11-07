@@ -2,7 +2,7 @@
 
 **Version :** 1.0  
 **Statut :** Référence des décisions du projet  
-**Dernière mise à jour :** 3 novembre 2026
+**Dernière mise à jour :** 10 novembre 2026
 
 ---
 
@@ -114,6 +114,20 @@ Ces valeurs sont les paramètres de référence du GDD, à confirmer par les tes
 | D-052 | L'ordre de validation est déterminé par le serveur.                                          | ACCEPTED |
 | D-053 | En cas d'égalité exacte, un départage déterministe basé sur le siège du joueur est appliqué. | ACCEPTED |
 | D-054 | Si la première attaque élimine son adversaire, la seconde attaque n'est pas exécutée.        | ACCEPTED |
+
+## 3.9 Système de bonus sur l'arène
+
+| ID    | Décision                                                                                       | Statut   |
+| ----- | ---------------------------------------------------------------------------------------------- | -------- |
+| D-191 | Un système de bonus apparaît sur l'arène pendant la partie.                                   | ACCEPTED |
+| D-192 | Quatre types de bonus : régénération, boost de déplacement, boost d'attaque, bouclier.          | ACCEPTED |
+| D-193 | La régénération restaure immédiatement 1 cristal (maximum 3) et n'occupe pas l'emplacement.    | ACCEPTED |
+| D-194 | Un seul bonus armé à la fois par joueur (régénération exceptée) ; le ramassage remplace l'ancien. | ACCEPTED |
+| D-195 | Le ramassage est automatique : position finale, trajectoire du déplacement ou zone d'attaque.   | ACCEPTED |
+| D-196 | Si les deux joueurs ramassent le même bonus le même tour, personne ne l'obtient.               | ACCEPTED |
+| D-197 | Le planning d'apparition est seedé par le serveur, déterministe, un spawn maximum par tour.     | ACCEPTED |
+| D-198 | Un bonus au sol vit 2 tours puis disparaît ; 2 bonus simultanés au sol maximum.                | ACCEPTED |
+| D-199 | Valeurs numériques des bonus (portées/angles boostés, quantités, fenêtre de spawn, rayon de ramassage) : PROPOSED, en attente d'équilibrage. | PROPOSED |
 
 ---
 
