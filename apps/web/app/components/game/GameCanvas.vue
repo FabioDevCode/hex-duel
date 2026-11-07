@@ -483,6 +483,10 @@ type ActiveStep =
       turnDurationMs: number;
       walkDurationMs: number;
       walkStarted: boolean;
+      faceFromYaw: number;
+      faceToYaw: number;
+      faceDurationMs: number;
+      faceStarted: boolean;
       startedAt: number;
     }
   | {
@@ -500,6 +504,11 @@ type ActiveStep =
       hitLandedEmitted: boolean;
       ariseStarted: boolean;
       ariseDone: boolean;
+      faceFromYaw: number;
+      faceToYaw: number;
+      faceDurationMs: number;
+      faceStarted: boolean;
+      faceDone: boolean;
       startedAt: number;
     };
 
@@ -543,6 +552,16 @@ const shortestAngle = (from: number, to: number): number => {
   return delta;
 };
 
+/** Yaw for a seat to face the opponent's current visual position. */
+const yawTowardOpponent = (seat: 0 | 1): number => {
+  const me = capsules?.[seat];
+  const other = capsules?.[seat === 0 ? 1 : 0];
+  if (!me || !other) return me?.rotation.y ?? 0;
+  const dx = other.position.x - me.position.x;
+  const dz = other.position.z - me.position.z;
+  return Math.atan2(dx, dz) - modelYawOffset(seat);
+};
+
 const startNextStep = (): void => {
   const next = queuedSteps.value.shift();
   if (!next) {
@@ -567,6 +586,10 @@ const startNextStep = (): void => {
       turnDurationMs,
       walkDurationMs: MOVE_DURATION_MS,
       walkStarted: false,
+      faceFromYaw: 0,
+      faceToYaw: 0,
+      faceDurationMs: 0,
+      faceStarted: false,
       startedAt: performance.now(),
     };
   } else if (next.kind === "attack") {
@@ -592,6 +615,11 @@ const startNextStep = (): void => {
       hitLandedEmitted: false,
       ariseStarted: false,
       ariseDone: false,
+      faceFromYaw: 0,
+      faceToYaw: 0,
+      faceDurationMs: 0,
+      faceStarted: false,
+      faceDone: false,
       startedAt: performance.now(),
     };
   }
@@ -627,13 +655,28 @@ const stepResolution = (): void => {
       animators?.[step.seat]?.playWalking();
     }
     const walkElapsed = elapsed - step.turnDurationMs;
-    const t = Math.min(1, walkElapsed / step.walkDurationMs);
-    const eased = t * t * (3 - 2 * t);
+    const walkT = Math.min(1, walkElapsed / step.walkDurationMs);
+    const walkEased = walkT * walkT * (3 - 2 * walkT);
     group.rotation.y = step.turnToYaw;
-    group.position.x = step.from.x + (step.to.x - step.from.x) * eased;
-    group.position.z = step.from.z + (step.to.z - step.from.z) * eased;
-    if (t >= 1) {
+    group.position.x = step.from.x + (step.to.x - step.from.x) * walkEased;
+    group.position.z = step.from.z + (step.to.z - step.from.z) * walkEased;
+    if (walkT < 1) return;
+    // Phase 3: arrived - turn to face the opponent.
+    if (!step.faceStarted) {
+      step.faceStarted = true;
       animators?.[step.seat]?.playIdle();
+      const currentYaw = group.rotation.y;
+      const targetYaw = yawTowardOpponent(step.seat);
+      const angle = Math.abs(shortestAngle(currentYaw, targetYaw));
+      step.faceFromYaw = currentYaw;
+      step.faceToYaw = currentYaw + shortestAngle(currentYaw, targetYaw);
+      step.faceDurationMs = Math.min(450, Math.max(120, (angle / Math.PI) * 450));
+    }
+    const faceElapsed = walkElapsed - step.walkDurationMs;
+    const faceT = Math.min(1, faceElapsed / step.faceDurationMs);
+    const faceEased = faceT * faceT * (3 - 2 * faceT);
+    group.rotation.y = step.faceFromYaw + (step.faceToYaw - step.faceFromYaw) * faceEased;
+    if (faceT >= 1) {
       startNextStep();
     }
     return;
@@ -664,43 +707,56 @@ const stepResolution = (): void => {
       });
     }
     // Phase 3: a few ms before the attack lands, the target starts
-    // falling ("Renverser" / Knock_Down).
+    // falling ("Renverser" / Knock_Down, horizontally pinned).
     const attackElapsed = elapsed - step.turnDurationMs;
     if (step.hit && !step.knockStarted && attackElapsed >= ATTACK_ANIM_MS - KNOCK_LEAD_MS) {
       step.knockStarted = true;
-      animators?.[targetSeat]?.playOnce("Knock_Down", KNOCKDOWN_MS, () => {
+      animators?.[targetSeat]?.playOncePinned("Knock_Down", KNOCKDOWN_MS, () => {
         const active = activeStep.value;
         if (active?.kind === "attack" && active.seat === step.seat) {
           active.knockDone = true;
         }
       });
     }
-    if (step.attackDone) {
-      // The attack landed: the target's crystal breaks now (once).
-      if (step.hit && !step.hitLandedEmitted) {
-        step.hitLandedEmitted = true;
-        emit("hitLanded", targetSeat);
-      }
-      if (!step.hit) {
-        activeStep.value = null;
-        startNextStep();
-        return;
-      }
+    if (attackElapsed < ATTACK_ANIM_MS) return;
+    // The attack landed: the target's crystal breaks now (once).
+    if (step.hit && !step.hitLandedEmitted) {
+      step.hitLandedEmitted = true;
+      emit("hitLanded", targetSeat);
+    }
+    const reactionDone = step.hit ? step.ariseDone : true;
+    if (!reactionDone) {
       // Phase 4: once knocked down, the target gets back up
-      // ("Se relever" / Arise), then the sequence continues.
+      // ("Se relever" / Arise, horizontally pinned to its arena spot).
       if (step.knockDone && !step.ariseStarted) {
         step.ariseStarted = true;
-        animators?.[targetSeat]?.playOnce("Arise", ARISE_MS, () => {
+        animators?.[targetSeat]?.playOncePinned("Arise", ARISE_MS, () => {
           const active = activeStep.value;
           if (active?.kind === "attack" && active.seat === step.seat) {
             active.ariseDone = true;
           }
         });
       }
-      if (step.ariseDone) {
-        activeStep.value = null;
-        startNextStep();
-      }
+      return;
+    }
+    // Phase 5: the attacker turns to face the opponent, then the
+    // sequence continues.
+    if (!step.faceStarted) {
+      step.faceStarted = true;
+      const currentYaw = group.rotation.y;
+      const targetYaw = yawTowardOpponent(step.seat);
+      const angle = Math.abs(shortestAngle(currentYaw, targetYaw));
+      step.faceFromYaw = currentYaw;
+      step.faceToYaw = currentYaw + shortestAngle(currentYaw, targetYaw);
+      step.faceDurationMs = Math.min(450, Math.max(120, (angle / Math.PI) * 450));
+    }
+    const faceElapsed = attackElapsed - ATTACK_ANIM_MS;
+    const faceT = Math.min(1, faceElapsed / step.faceDurationMs);
+    const faceEased = faceT * faceT * (3 - 2 * faceT);
+    group.rotation.y = step.faceFromYaw + (step.faceToYaw - step.faceFromYaw) * faceEased;
+    if (faceT >= 1) {
+      activeStep.value = null;
+      startNextStep();
     }
   }
 };
