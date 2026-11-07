@@ -52,7 +52,7 @@
         <h2 class="modal-title">{{ t("surrender.title") }}</h2>
         <p class="modal-text">{{ t("surrender.text") }}</p>
         <div class="modal-actions">
-          <button class="btn" @click="surrenderOpen = false">{{ t("surrender.cancel") }}</button>
+          <button class="btn back-btn" @click="surrenderOpen = false">{{ t("surrender.cancel") }}</button>
           <button class="btn btn-primary" @click="$emit('surrender'); surrenderOpen = false">
             {{ t("surrender.confirm") }}
           </button>

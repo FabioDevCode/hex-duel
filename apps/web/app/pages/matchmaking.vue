@@ -2,7 +2,7 @@
   <div class="matchmaking">
     <p class="searching">{{ t("matchmaking.searching") }}</p>
     <div class="spinner" />
-    <button class="btn" @click="cancelAndBack">{{ t("matchmaking.cancel") }}</button>
+    <button class="btn back-btn" @click="cancelAndBack">{{ t("matchmaking.cancel") }}</button>
   </div>
 </template>
 

@@ -43,7 +43,7 @@
           <p class="text-secondary">{{ turnsPlayed }}</p>
           <div class="result-actions">
             <button class="btn btn-primary" @click="playAgain">{{ t("result.playAgain") }}</button>
-            <button class="btn" @click="backToMenu">{{ t("result.backToMenu") }}</button>
+            <button class="btn back-btn" @click="backToMenu">{{ t("result.backToMenu") }}</button>
           </div>
         </div>
       </div>
@@ -55,7 +55,7 @@
             <button class="btn btn-primary" @click="copyCode">
               {{ codeCopied ? t("room.copied") : t("room.copy") }}
             </button>
-            <button class="btn" @click="cancelPrivateRoom">{{ t("matchmaking.cancel") }}</button>
+            <button class="btn back-btn" @click="cancelPrivateRoom">{{ t("matchmaking.cancel") }}</button>
           </div>
         </div>
       </div>
