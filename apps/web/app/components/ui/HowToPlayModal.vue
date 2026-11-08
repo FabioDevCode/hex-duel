@@ -297,9 +297,9 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
 .howto-nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 24px 18px;
+  gap: 40px;
+  padding: 0px 24px 18px;
+  margin: 0 auto;
 }
 
 .howto-nav-btn {
@@ -307,8 +307,6 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   font-weight: 700;
   font-size: 0.9rem;
   letter-spacing: 0.05em;
-  /* color: whitesmoke;
-  background: #3d2410; */
   background-image: linear-gradient(
       160deg,
     #CB5901,
@@ -346,14 +344,14 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   height: 12px;
   border-radius: 50%;
   border: none;
-  background: rgba(41, 26, 6, 0.3);
+  background: rgba(250, 250, 250, 0.3);
   cursor: pointer;
   padding: 0;
   transition: background 0.15s;
 }
 
 .howto-dot.active {
-  background: #3d2410;
+  background: #f9f7f6;
 }
 
 @media (max-width: 640px) {

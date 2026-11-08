@@ -37,7 +37,7 @@
               un petit jeu en ligne de A à Z, aidé par des IA pour le code, l'art et la 3D.
             </p>
             <p class="credits-line">
-              Toute ressemblance avec un vrai studio de développement est purement fortuite —
+              Toute ressemblance avec un vrai studio de développement est purement fortuite -
               ici, le lead dev, le QA et le compositeur partagent le même lit.
             </p>
           </div>
@@ -138,14 +138,14 @@ const sections: { title: string; entries: [string, string][] }[] = [
 
 const thanks: string[] = [
   "Aux GPU du monde entier qui ont chauffé pour ce jeu",
-  "À Mistral, OpenAI et Meshy, employés du mois à égalité",
-  "À vous, qui lisez les crédits jusqu'ici. Sérieusement ? Merci. 💛",
+  "À Mistral Vibe, ChatGPT et Meshy, employés du mois à égalité",
+  "À vous, qui lisez les crédits jusqu'ici. Sérieusement ? Merci. ♥",
 ];
 
 // --- Auto-scroll: slow, constant, pausable, stops at the end ------------
-const SCROLL_PX_PER_TICK = 0.6;
-const TICK_MS = 30;
-const RESUME_DELAY_MS = 1500;
+const SCROLL_PX_PER_TICK = 0.8;
+const TICK_MS = 50;
+const RESUME_DELAY_MS = 1200;
 
 let scrollTimer: ReturnType<typeof setInterval> | null = null;
 let resumeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -274,7 +274,7 @@ onBeforeUnmount(() => {
 }
 
 .credits-content {
-  padding: 45vh 24px 55vh;
+  padding: 45vh 24px 25vh;
   text-align: center;
 }
 
@@ -283,8 +283,22 @@ onBeforeUnmount(() => {
   font-weight: 700;
   font-size: 2.6rem;
   letter-spacing: 0.18em;
-  color: var(--accent);
   margin: 0 0 10px;
+  /* color: var(--accent); */
+  background: linear-gradient(
+    160deg,
+    #CB5901,
+    #CB5901,
+    #FD9909,
+    #FCF069,
+    #FD9909,
+    #CB5901,
+    #CB5901
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 .credits-subtitle {
@@ -304,8 +318,19 @@ onBeforeUnmount(() => {
   font-weight: 700;
   font-size: 1.35rem;
   letter-spacing: 0.08em;
-  color: var(--accent);
   margin: 0 0 26px;
+  background: linear-gradient(
+    160deg,
+    #CB5901,
+    #FD9909,
+    #FCF069,
+    #FD9909,
+    #CB5901
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 .credits-entry {
