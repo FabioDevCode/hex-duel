@@ -5,9 +5,10 @@
     <NuxtLink to="/play" class="btn play-btn golden-button">
       {{ t("home.play") }}
     </NuxtLink>
-    <button class="btn second-btn golden-button">
-      Comment jouer ?
+    <button class="btn second-btn golden-button" @click="howToOpen = true">
+      {{ t("howto.title") }}
     </button>
+    <HowToPlayModal v-if="howToOpen" @close="howToOpen = false" />
     <button class="btn second-btn golden-button">
       Crédits
     </button>
@@ -16,7 +17,10 @@
 
 <script setup lang="ts">
 import { useI18n } from "~/composables/useI18n";
+import HowToPlayModal from "~/components/ui/HowToPlayModal.vue";
+
 const { t } = useI18n();
+const howToOpen = ref(false);
 
 definePageMeta({ layout: "main" });
 </script>
