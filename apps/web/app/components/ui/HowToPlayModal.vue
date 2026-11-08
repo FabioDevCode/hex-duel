@@ -169,13 +169,13 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
 
 .howto-modal {
   position: relative;
-  width: min(760px, 100%);
+  width: min(980px, 100%);
   border-radius: 12px;
   background-image: url("/img/parchemin.png");
-  background-size: cover;
+  background-repeat: no-repeat;
+  background-size: contain;
   background-position: center;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
-  color: #2a1a0f;
+  color: whitesmoke;
   display: flex;
   flex-direction: column;
 }
@@ -188,15 +188,18 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   border: none;
   font-size: 2rem;
   line-height: 1;
-  color: #2a1a0f;
+  color: whitesmoke;
   cursor: pointer;
   z-index: 2;
+  height: 40px;
+  width: 40px;
 }
 
 .howto-page {
   /* Fixed height so every page keeps the same parchment footprint. */
   min-height: 430px;
-  padding: 40px 48px 16px;
+  height: 90svh;
+  padding: 90px 120px 50px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -206,7 +209,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
 .howto-heading {
   font-family: var(--font-title);
   font-weight: 700;
-  color: #3d2410;
+  color: whitesmoke;
   margin: 0 0 8px;
 }
 
@@ -214,14 +217,18 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   text-align: center;
   font-size: 1.7rem;
   letter-spacing: 0.06em;
-  border-bottom: 2px solid rgba(61, 36, 16, 0.35);
+  width: 90%;
+  margin: 0 auto;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.35);
   padding-bottom: 8px;
 }
+
 
 .howto-text {
   font-family: var(--font-body);
   font-weight: 400;
-  font-size: 1rem;
+  font-size: .9rem;
+  color: rgba(245, 245, 245, .8);
   line-height: 1.55;
   margin: 0;
 }
@@ -270,7 +277,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   font-family: var(--font-title);
   font-weight: 700;
   font-size: 0.95rem;
-  color: #3d2410;
+  color: whitesmoke;
 }
 
 .howto-crystals {
@@ -300,18 +307,28 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   font-weight: 700;
   font-size: 0.9rem;
   letter-spacing: 0.05em;
-  color: #f5f7fa;
-  background: #3d2410;
+  /* color: whitesmoke;
+  background: #3d2410; */
+  background-image: linear-gradient(
+      160deg,
+    #CB5901,
+    #FD9909,
+    #FCF069,
+    #FD9909,
+    #CB5901
+  );
+  color: #ac4a00;
+  text-shadow: 0 1px 1px #FCF069;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.16),
+    0 3px 6px rgba(110, 80, 20, 0.4),
+    inset 0 -2px 5px 1px rgba(203, 89, 1, 1),
+    inset 0 -1px 1px 3px rgba(250, 227, 133, 1);
   border: none;
   border-radius: 8px;
   padding: 9px 22px;
   min-width: 110px;
   cursor: pointer;
   transition: background 0.15s;
-}
-
-.howto-nav-btn:hover:not(:disabled) {
-  background: #59371b;
 }
 
 .howto-nav-btn:disabled {
@@ -329,7 +346,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   height: 12px;
   border-radius: 50%;
   border: none;
-  background: rgba(61, 36, 16, 0.3);
+  background: rgba(41, 26, 6, 0.3);
   cursor: pointer;
   padding: 0;
   transition: background 0.15s;
