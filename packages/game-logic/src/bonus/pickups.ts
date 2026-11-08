@@ -42,11 +42,17 @@ export const pickupMethod = (
     }
   }
   if (attackParams && (action.type === "STRIKE" || action.type === "SNIPER")) {
+    // The attack zone is extended by the pickup radius: the bonus is
+    // collected as soon as the cone touches its delimited zone, not
+    // only when its exact center is inside the cone.
     const covered = checkAttack(
       start,
       bonus.position,
       { type: attackParams.type, direction: action.direction },
-      { range: attackParams.range, angle: attackParams.angle },
+      {
+        range: attackParams.range + BONUS_CONFIG.pickupRadius,
+        angle: attackParams.angle,
+      },
     );
     if (covered.hits) return "ATTACK";
   }
