@@ -1,6 +1,6 @@
 <template>
   <div class="profile">
-    <h1>{{ t("nav.profile") }}</h1>
+    <h1>{{ t("nav.profile") }} - {{ pseudonym }}</h1>
     <!-- <div v-if="stats" class="stats panel">
       <div class="stat">
         <span class="stat-value">{{ stats.matchesPlayed }}</span>
@@ -21,7 +21,7 @@
     </div>
     <p v-else class="text-secondary">{{ t("profile.noData") }}</p> -->
     <div class="pseudonym panel">
-      <label class="pseudo-label" for="pseudo-input">{{ t("profile.pseudonym") }}</label>
+      <label class="pseudo-label" for="pseudo-input">{{ t("profile.pseudonymChange") }}</label>
       <div class="pseudo-row">
         <input
           id="pseudo-input"
@@ -33,8 +33,8 @@
         >
         <button class="btn btn-primary" @click="savePseudonym">{{ t("profile.pseudonymSave") }}</button>
       </div>
-      <p v-if="pseudoFeedback === 'saved'" class="pseudo-feedback ok">{{ t("profile.pseudonymSaved") }}</p>
-      <p v-else-if="pseudoFeedback === 'invalid'" class="pseudo-feedback error">{{ t("profile.pseudonymInvalid") }}</p>
+      <!-- <p v-if="pseudoFeedback === 'saved'" class="pseudo-feedback ok">{{ t("profile.pseudonymSaved") }}</p>
+      <p v-else-if="pseudoFeedback === 'invalid'" class="pseudo-feedback error">{{ t("profile.pseudonymInvalid") }}</p> -->
     </div>
 
     <!-- <hr class="separator"> -->

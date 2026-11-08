@@ -1,7 +1,9 @@
 <template>
   <div class="matchmaking">
     <p class="searching">{{ t("matchmaking.searching") }}</p>
-    <div class="spinner" />
+
+    <img class="spinner" src="/img/spinner.png" alt="spinner">
+
     <button class="btn back-btn" @click="cancelAndBack">{{ t("matchmaking.cancel") }}</button>
   </div>
 </template>
@@ -46,24 +48,14 @@ onBeforeUnmount(() => {
 .searching {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #170E1A;
+  color: whitesmoke;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.8));
 }
 
 .spinner {
-  width: 48px;
-  height: 48px;
-  border: 2px solid #170E1A;
-  corner-shape: bevel;
-  border-radius: 14px;
-  background-image: linear-gradient(
-      160deg,
-      #CB5901,
-      #FD9909,
-      #FCF069,
-      #FD9909,
-      #CB5901
-  );
-  animation: spin 1s linear infinite;
+  width: 100px;
+  height: 100px;
+  animation: spin 1.8s linear infinite;
 }
 
 @keyframes spin {
