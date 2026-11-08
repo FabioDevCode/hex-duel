@@ -9,18 +9,21 @@
       {{ t("howto.title") }}
     </button>
     <HowToPlayModal v-if="howToOpen" @close="howToOpen = false" />
-    <button class="btn second-btn golden-button">
-      Crédits
+    <button class="btn second-btn golden-button" @click="creditsOpen = true">
+      {{ t("home.credits") }}
     </button>
+    <CreditsOverlay :visible="creditsOpen" @close="creditsOpen = false" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from "~/composables/useI18n";
 import HowToPlayModal from "~/components/ui/HowToPlayModal.vue";
+import CreditsOverlay from "~/components/ui/CreditsOverlay.vue";
 
 const { t } = useI18n();
 const howToOpen = ref(false);
+const creditsOpen = ref(false);
 
 definePageMeta({ layout: "main" });
 </script>
