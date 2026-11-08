@@ -197,6 +197,8 @@ let previousBodyOverflow = "";
 watch(
   () => props.visible,
   (visible) => {
+    // SSR guard: the DOM only exists on the client.
+    if (!import.meta.client) return;
     if (visible) {
       // Block the page scroll behind the overlay; fresh open starts at the
       // top (the container renders on the next tick).
@@ -218,6 +220,7 @@ onMounted(() => window.addEventListener("keydown", onKey));
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", onKey);
   cleanup();
+  // onBeforeUnmount only runs on the client.
   document.body.style.overflow = previousBodyOverflow;
 });
 </script>
