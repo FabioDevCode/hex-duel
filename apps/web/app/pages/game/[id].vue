@@ -10,6 +10,7 @@
         :my-seat="mySeat ?? 0"
         :resolution="resolution"
         :interrupt="interruptResolution"
+        :fatal-attacker-seat="fatalAttackerSeat"
         :bonuses="displayedBonuses"
         :current-turn="gameState?.turnNumber ?? 0"
         :armed-bonus="gameState?.players?.[mySeat ?? 0]?.armedBonus ?? null"
@@ -99,6 +100,10 @@ const resolution = ref<{ steps: ResolutionStep[] } | null>(null);
 // last crystal): the remaining steps are cancelled, nothing animates
 // behind the victory/defeat overlay.
 const interruptResolution = ref(false);
+// Seat of the attack that ended the game (the last resolved attack): the
+// client plays the resolution up to and including that attack, so the
+// fatal blow is always shown - even when it is the second attack.
+const fatalAttackerSeat = ref<0 | 1 | null>(null);
 // Index (1-based) of the crystal restored by a regeneration, per seat: it
 // displays as the green crystal until destroyed again.
 const regenCrystalIndex = ref<[number | null, number | null]>([null, null]);
@@ -468,6 +473,12 @@ const bindMessages = (): void => {
     interruptResolution.value = message.players.some(
       (player) => !player.isAlive || player.crystals <= 0,
     );
+    // The server stops resolving right after the kill: the fatal attack is
+    // the last one in the list.
+    const lastAttack = message.attacks?.[message.attacks.length - 1];
+    fatalAttackerSeat.value = interruptResolution.value
+      ? ((lastAttack?.attackerSeat ?? null) as 0 | 1 | null)
+      : null;
     pendingPickups.value = message.bonusEvents?.pickups ?? [];
     // Hold the armed bonuses as they were BEFORE this resolution: the
     // icons must not change until the animation shows the pickup.

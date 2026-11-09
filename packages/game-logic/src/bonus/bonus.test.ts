@@ -229,6 +229,45 @@ describe("resolveTurn with bonuses", () => {
     expect(resolution.attacks).toHaveLength(1);
   });
 
+  it("collects a bonus as soon as the attack cone touches its zone (angle edge)", () => {
+    // SNIPER (10deg half-angle 5deg): the bonus sits 8 units away, 9deg
+    // off-axis. The cone edge line touches the bonus marker circle
+    // (angular radius asin(1.3/8) ~9.3deg) -> collected, even though the
+    // bonus CENTER is outside the strict cone.
+    const ground: GroundBonus[] = [
+      { id: "atk-edge", type: "ATTACK", position: { x: -6 + 8 * Math.cos(0.157), z: 8 * Math.sin(0.157) }, spawnTurn: 2 },
+    ];
+    const resolution = resolveTurn(
+      [player(0, -6, 0), player(1, 6, 0)],
+      { 0: { type: "SNIPER", direction: 0 }, 1: { type: "PASS" } },
+      orders,
+      2,
+      bonusContext(ground),
+    );
+    expect(resolution.bonuses!.events.pickups[0]).toMatchObject({
+      seat: 0,
+      bonus: { id: "atk-edge" },
+      method: "ATTACK",
+    });
+  });
+
+  it("collects a bonus by trajectory when the move passes through it (clamped target)", () => {
+    // The player clicks beyond the bonus: the move is clamped to 5 units
+    // (as the server does), the path still crosses the bonus zone.
+    const ground: GroundBonus[] = [
+      { id: "move-cross", type: "MOVE", position: { x: -2, z: 0.9 }, spawnTurn: 2 },
+    ];
+    const resolution = resolveTurn(
+      [player(0, -6, 0), player(1, 6, 0)],
+      { 0: { type: "MOVE", target: { x: -1, z: 0 } }, 1: { type: "PASS" } },
+      orders,
+      2,
+      bonusContext(ground),
+    );
+    expect(resolution.bonuses!.armed[0]).toBe("MOVE");
+    expect(resolution.bonuses!.events.pickups[0]).toMatchObject({ method: "TRAJECTORY" });
+  });
+
   it("nobody gets a bonus both players pick the same turn (D-196)", () => {
     const ground: GroundBonus[] = [
       { id: "atk-1", type: "ATTACK", position: { x: 0, z: 0 }, spawnTurn: 2 },

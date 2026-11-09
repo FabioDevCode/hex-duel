@@ -1,6 +1,6 @@
 import { BONUS_CONFIG } from "@hex-duel/shared";
 import type { AttackType, GroundBonus, PickupMethod, PlayerAction, Vector2 } from "@hex-duel/shared";
-import { checkAttack } from "../combat/calculateAttack";
+import { angleBetweenDeg } from "../combat/calculateAttack";
 
 /** Distance from a point to the segment [a, b]. */
 export const segmentDistance = (a: Vector2, b: Vector2, point: Vector2): number => {
@@ -42,19 +42,18 @@ export const pickupMethod = (
     }
   }
   if (attackParams && (action.type === "STRIKE" || action.type === "SNIPER")) {
-    // The attack zone is extended by the pickup radius: the bonus is
-    // collected as soon as the cone touches its delimited zone, not
-    // only when its exact center is inside the cone.
-    const covered = checkAttack(
-      start,
-      bonus.position,
-      { type: attackParams.type, direction: action.direction },
-      {
-        range: attackParams.range + BONUS_CONFIG.pickupRadius,
-        angle: attackParams.angle,
-      },
-    );
-    if (covered.hits) return "ATTACK";
+    // The bonus is collected as soon as the attack cone TOUCHES its
+    // delimited ground zone (the marker circle), not only when the exact
+    // center is inside the cone: the range is extended by the pickup
+    // radius and the angle by the zone's apparent angular size
+    // asin(radius / distance) - matching what the player sees on screen.
+    const distance = Math.hypot(bonus.position.x - start.x, bonus.position.z - start.z);
+    if (distance <= attackParams.range + BONUS_CONFIG.pickupRadius) {
+      const angleDelta = angleBetweenDeg(start, bonus.position, action.direction);
+      const angularRadius =
+        (Math.asin(Math.min(1, BONUS_CONFIG.pickupRadius / Math.max(distance, 1e-9))) * 180) / Math.PI;
+      if (angleDelta <= attackParams.angle / 2 + angularRadius) return "ATTACK";
+    }
   }
   return null;
 };

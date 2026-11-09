@@ -54,6 +54,10 @@ const props = defineProps<{
   /** A player just lost their last crystal: the remaining resolution
    * steps are cancelled so nothing animates behind the result overlay. */
   interrupt: boolean;
+  /** Seat of the attack that ended the game (the last resolved attack):
+   * the steps up to and including that attack still play, so the fatal
+   * blow is always shown - even when it is the second attack. */
+  fatalAttackerSeat: 0 | 1 | null;
   /** Bonuses lying on the arena (public synced state, D-134). */
   bonuses: GroundBonus[];
   /** Current turn number, for the last-turn translucency. */
@@ -574,25 +578,52 @@ const ARISE_MS = 800;
 
 const queuedSteps = ref<ResolutionStep[]>([]);
 
-// Game-ending resolution: drop every step that would play after the fatal
-// blow. The current step finishes cleanly (knockdown, get-up, face-off),
-// then the queue drains and the scene stays still until the overlay.
+// Game-ending resolution: every step AFTER the fatal blow is dropped.
+// The steps up to and including the fatal attack still play - the fatal
+// blow is always shown, even when it is the second attack - then the
+// queue drains and the scene stays still until the overlay.
 watch(
   () => props.interrupt,
   (interrupt) => {
     if (!interrupt) return;
-    queuedSteps.value = [];
-    if (!activeStep.value) {
+    trimQueueAfterFatalAttack();
+    if (!activeStep.value && queuedSteps.value.length === 0) {
       // Nothing was playing: release the held crystals right away.
       emit("resolutionEnd");
     }
   },
 );
+
+/** Drops every queued step after the fatal attack step. When the fatal
+ * seat is unknown (no attack ended the game), drops everything pending. */
+const trimQueueAfterFatalAttack = (): void => {
+  const queue = queuedSteps.value;
+  if (props.fatalAttackerSeat === null) {
+    queuedSteps.value = [];
+    return;
+  }
+  let fatalIndex = -1;
+  for (let i = 0; i < queue.length; i++) {
+    const step = queue[i]!;
+    if (step.kind === "attack" && step.seat === props.fatalAttackerSeat) fatalIndex = i;
+  }
+  if (fatalIndex === -1) {
+    // The fatal step already left the queue: nothing more to play.
+    queuedSteps.value = [];
+    return;
+  }
+  queuedSteps.value = queue.slice(0, fatalIndex + 1);
+};
+
+// Safety net for watcher ordering: never start a step once the fatal
+// attack has been shown (interrupt active).
+let fatalAttackShown = false;
 const activeStep = ref<ActiveStep | null>(null);
 
 const playResolution = (): void => {
   if (!scene || !capsules) return;
   fadedGhosts.clear();
+  fatalAttackShown = false;
   // Any leftover walking state from a previous resolution is cleanly
   // crossfaded back to idle before the new sequence starts.
   animators?.[0]?.playIdle();
@@ -629,6 +660,9 @@ const yawTowardOpponent = (seat: 0 | 1): number => {
 };
 
 const startNextStep = (): void => {
+  if (props.interrupt && fatalAttackShown) {
+    queuedSteps.value = [];
+  }
   const next = queuedSteps.value.shift();
   if (!next) {
     activeStep.value = null;
@@ -637,6 +671,11 @@ const startNextStep = (): void => {
     bonusRenderer?.clearGhosts();
     emit("resolutionEnd");
     return;
+  }
+  if (next.kind === "attack" && props.interrupt && props.fatalAttackerSeat !== null
+    && next.seat === props.fatalAttackerSeat) {
+    // This is the fatal attack: once it completes, nothing else plays.
+    fatalAttackShown = true;
   }
   if (next.kind === "move") {
     const group = capsules?.[next.seat];
