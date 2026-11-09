@@ -146,6 +146,35 @@ describe("resolveTurn with bonuses", () => {
     expect(resolution.bonuses!.ground[0]!.spawnTurn).toBe(first.turn);
   });
 
+  it("never collects a bonus that spawns during the same resolution", () => {
+    const seed = 42;
+    const schedule = generateBonusSchedule(seed);
+    const first = schedule[0]!;
+    // The exact spot where the bonus will appear at the end of the turn.
+    const spawnPosition = computeBonusPosition(
+      seed,
+      first.id,
+      [{ x: -6, z: 0 }, { x: 6, z: 0 }],
+      () => true,
+    );
+    // Player 0 attacks straight at the future spawn spot: even though the
+    // attack zone covers it, the bonus appears AFTER the pickups - it must
+    // not be collected by this turn's attack.
+    const direction = (Math.atan2(spawnPosition.z, spawnPosition.x + 6) * 180) / Math.PI;
+    const resolution = resolveTurn(
+      [player(0, -6, 0), player(1, 6, 0)],
+      { 0: { type: "STRIKE", direction }, 1: { type: "PASS" } },
+      orders,
+      first.turn,
+      bonusContext([], [null, null], seed),
+    );
+    expect(resolution.bonuses!.events.spawned.map((b) => b.id)).toEqual([first.id]);
+    expect(resolution.bonuses!.events.pickups).toHaveLength(0);
+    expect(resolution.bonuses!.armed[0]).toBeNull();
+    // The bonus is on the ground, ready for the NEXT turn.
+    expect(resolution.bonuses!.ground.map((b) => b.id)).toEqual([first.id]);
+  });
+
   it("does not spawn beyond the maximum on ground", () => {
     const seed = 42;
     const schedule = generateBonusSchedule(seed);
@@ -308,7 +337,10 @@ describe("resolveTurn with bonuses", () => {
       bonusContext(alive.bonuses!.ground),
     );
     expect(expired.bonuses!.events.expired).toEqual(["old"]);
-    expect(expired.bonuses!.ground.map((b) => b.id)).toEqual(["filler"]);
+    const ids = expired.bonuses!.ground.map((b) => b.id);
+    expect(ids).toContain("filler");
+    expect(ids).not.toContain("old");
+    // (a bonus scheduled for this turn may have spawned at the end)
   });
 
   it("applies the MOVE boost (5 -> 7) and consumes it", () => {

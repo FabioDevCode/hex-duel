@@ -88,22 +88,9 @@ export const resolveTurn = (
     : [null, null];
   let workingPlayers: [PlayerState, PlayerState] = [players[0], players[1]];
 
-  // Spawn due this turn (at most one by schedule design, capped on ground).
-  if (bonus && ground.length < BONUS_CONFIG.maxOnGround) {
-    const schedule = generateBonusSchedule(bonus.seed);
-    const due = schedule.find((spawn) => spawn.turn === turnNumber);
-    if (due) {
-      const position = computeBonusPosition(
-        bonus.seed,
-        due.id,
-        [players[0].position, players[1].position],
-        insideArena,
-      );
-      const spawned = instantiateGroundBonus(due, position);
-      ground.push(spawned);
-      events.spawned.push(spawned);
-    }
-  }
+  // NOTE: the bonus scheduled for this turn spawns at the END of the
+  // resolution (after the pickups), so the actions of this turn can never
+  // collect it: it only appears on the arena for the NEXT turn.
 
   // --- Movement ----------------------------------------------------------
   const moveDistances: [number, number] | undefined = bonus
@@ -328,6 +315,29 @@ const finish = (
       }
     }
     ground = survivors;
+
+    // --- Spawn of the bonus scheduled for this turn -----------------------
+    // Deliberately AFTER the pickups: a bonus appearing during this
+    // resolution can never be collected by this turn's actions (an attack
+    // aimed at its spot must not grab it). It appears on the arena for the
+    // NEXT turn; the spawn position is computed from the turn-start
+    // positions for spatial fairness, and the ground cap applies to the
+    // post-resolution state.
+    if (ground.length < BONUS_CONFIG.maxOnGround) {
+      const schedule = generateBonusSchedule(bonus.seed);
+      const due = schedule.find((spawn) => spawn.turn === turnNumber);
+      if (due) {
+        const position = computeBonusPosition(
+          bonus.seed,
+          due.id,
+          startPositions,
+          insideArena,
+        );
+        const spawned = instantiateGroundBonus(due, position);
+        ground.push(spawned);
+        events.spawned.push(spawned);
+      }
+    }
   }
 
   const { finished, result } = determineWinner(players, turnNumber);
