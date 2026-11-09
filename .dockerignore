@@ -1,0 +1,18 @@
+# Keep the Docker build context small: only what pnpm needs to install and
+# build the apps. The .output/.nuxt/node_modules of the host are rebuilt
+# inside the images.
+node_modules
+**/node_modules
+apps/web/.output
+apps/web/.nuxt
+apps/web/.data
+**/dist
+.git
+.env
+.env.*
+!.env.example
+docs
+test-results
+playwright-report
+coverage
+*.log
