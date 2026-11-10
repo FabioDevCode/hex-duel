@@ -87,6 +87,7 @@ const { t } = useI18n();
   width: 40px;
   height: 40px;
   object-fit: contain;
+  overflow: visible;
   display: block;
   filter: drop-shadow(2px 3px 6px rgba(0, 0, 0, 0.7));
   transition: transform 0.15s ease;

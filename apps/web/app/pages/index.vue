@@ -40,6 +40,7 @@ definePageMeta({ layout: "main" });
 img {
   max-width: 500px;
   width: 100%;
+  overflow: visible;
   filter: drop-shadow(2px 6px 16px rgba(0, 0, 0, 0.9));
 }
 

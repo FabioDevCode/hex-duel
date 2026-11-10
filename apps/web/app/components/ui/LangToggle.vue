@@ -60,6 +60,7 @@ const toggleLocale = (): void => {
   object-fit: contain;
   display: block;
   pointer-events: none;
+  overflow: visible;
   filter: drop-shadow(2px 3px 6px rgba(0, 0, 0, 0.7));
 }
 </style>

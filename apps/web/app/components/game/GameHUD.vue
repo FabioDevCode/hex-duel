@@ -55,7 +55,7 @@
         <img class="modal-img" src="/img/i-giveup.png" alt="Give Up">
         <h2 class="modal-title">{{ t("surrender.title") }}</h2>
         <p class="modal-text">{{ t("surrender.text") }}</p>
-        <div class="modal-actions">
+        <div class="modal-actions mt">
           <button class="btn back-btn" @click="surrenderOpen = false">{{ t("surrender.cancel") }}</button>
           <button class="btn btn-primary" @click="$emit('surrender'); surrenderOpen = false">
             {{ t("surrender.confirm") }}
@@ -253,11 +253,11 @@ export type { AttackType };
 }
 
 .modal-img {
-  width: 180px;
+  width: 220px;
 }
 
 .modal-title {
-  font-size: 1.2rem;
+  font-size: 1.6rem;
   letter-spacing: 0.1em;
 }
 
@@ -268,6 +268,10 @@ export type { AttackType };
 .modal-actions {
   display: flex;
   gap: 12px;
+}
+
+.modal-actions.mt {
+  margin-top: 16px;
 }
 
 .btn-danger {

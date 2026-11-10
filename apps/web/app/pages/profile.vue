@@ -37,7 +37,7 @@
       <p v-else-if="pseudoFeedback === 'invalid'" class="pseudo-feedback error">{{ t("profile.pseudonymInvalid") }}</p> -->
     </div>
 
-    <!-- <hr class="separator"> -->
+    <hr class="separator">
 
     <NuxtLink to="/" class="btn back-btn">
       {{ t("result.backToMenu") }}

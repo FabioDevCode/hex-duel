@@ -2,7 +2,7 @@
   <div class="room">
     <div class="room-actions">
       <button class="btn create-btn golden-button" @click="createRoom">{{ t("room.create") }}</button>
-      <!-- <hr class="separator"> -->
+      <hr class="separator">
       <form class="join-form" @submit.prevent="joinRoom">
         <input
           v-model="joinCode"
@@ -15,7 +15,7 @@
         </button>
       </form>
 
-      <!-- <hr class="separator"> -->
+      <hr class="separator">
 
       <NuxtLink to="/play" class="btn back-btn">
         {{ t("room.back") }}

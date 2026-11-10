@@ -586,7 +586,7 @@ onBeforeUnmount(() => {
 }
 
 .result-img {
-  width: 180px;
+  width: 220px;
 }
 
 .result-players {
@@ -621,7 +621,7 @@ onBeforeUnmount(() => {
 .result-actions {
   display: flex;
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 32px;
   justify-content: center;
 }
 </style>

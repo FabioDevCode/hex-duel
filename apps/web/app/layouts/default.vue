@@ -56,6 +56,7 @@ const { t } = useI18n();
 
 .logo img {
   height: 40px;
+  overflow: visible;
   filter: drop-shadow(2px 3px 6px rgba(0, 0, 0, 0.7));
 }
 
