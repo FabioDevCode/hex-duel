@@ -1,16 +1,36 @@
 # Keep the Docker build context small: only what pnpm needs to install and
-# build the apps. The .output/.nuxt/node_modules of the host are rebuilt
-# inside the images.
+# build the apps. Installed trees and build outputs are rebuilt inside the
+# images.
 node_modules
 **/node_modules
 apps/web/.output
 apps/web/.nuxt
 apps/web/.data
 **/dist
+**/.cache
+
+# VCS and metadata useless to the build.
 .git
+.gitignore
+.github
+*.md
+LICENSE
+AGENTS.md
+DECISIONS.md
+
+# Local environment and tooling - never bake secrets into the context.
 .env
 .env.*
 !.env.example
+.vscode
+.idea
+.DS_Store
+
+# Compose files are orchestration, not build inputs.
+compose.yml
+compose.prod.yml
+
+# Docs, tests and reports are not needed to build the images.
 docs
 test-results
 playwright-report
