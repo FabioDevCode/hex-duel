@@ -20,6 +20,6 @@ WORKDIR /app/apps/web
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
-EXPOSE 3000
+EXPOSE 3333
 
 CMD ["node", ".output/server/index.mjs"]
