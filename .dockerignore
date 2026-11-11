@@ -1,38 +1,57 @@
-# Keep the Docker build context small: only what pnpm needs to install and
-# build the apps. Installed trees and build outputs are rebuilt inside the
-# images.
-node_modules
-**/node_modules
-apps/web/.output
-apps/web/.nuxt
-apps/web/.data
-**/dist
-**/.cache
+# =============================================================================
+# Docker build context (context = repo root): keep the "transferring context"
+# step small and free of anything sensitive. Everything excluded here is
+# either rebuilt inside the images or not needed by any build.
+#
+# NEVER exclude: pnpm-lock.yaml, package.json, pnpm-workspace.yaml and the
+# workspace package.json files (apps/*, packages/*) - they are COPY-ed by
+# the manifest stage of both Dockerfiles.
+# =============================================================================
 
-# VCS and metadata useless to the build.
+# --- VCS: the .git folder especially is heavy ---
 .git
 .gitignore
+.gitattributes
 .github
-*.md
-LICENSE
-AGENTS.md
-DECISIONS.md
 
-# Local environment and tooling - never bake secrets into the context.
+# --- dependency trees: installed inside the images ---
+node_modules
+**/node_modules
+
+# --- build outputs and caches: rebuilt inside the images ---
+**/.output
+**/.nuxt
+**/dist
+**/.cache
+.turbo
+.vite
+coverage
+apps/web/.data
+
+# --- environment files: never bake secrets into the context ---
 .env
 .env.*
 !.env.example
-.vscode
-.idea
-.DS_Store
 
-# Compose files are orchestration, not build inputs.
+# --- Docker orchestration: no container needs these in its context ---
 compose.yml
 compose.prod.yml
+**/Dockerfile
 
-# Docs, tests and reports are not needed to build the images.
+# --- logs, OS noise, editors ---
+*.log
+logs
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+
+# --- docs and metadata not needed by the builds ---
+# (verified: no build script reads a .md or the LICENSE file)
 docs
+/*.md
+LICENSE
+
+# --- test and coverage reports ---
 test-results
 playwright-report
-coverage
-*.log
